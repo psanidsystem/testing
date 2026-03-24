@@ -1171,65 +1171,70 @@ window.printSlip = function() {
 };
 
 window.downloadSlip = async function() {
-  const slip = document.getElementById("printableSlip");
-  if (!slip) return;
+  const originalSlip = document.getElementById("printableSlip");
+  if (!originalSlip) return;
 
-  const actionBox = slip.querySelector(".slip-actions");
-
-  const originalStyles = {
-    width: slip.style.width,
-    maxWidth: slip.style.maxWidth,
-    margin: slip.style.margin,
-    transform: slip.style.transform,
-    boxShadow: slip.style.boxShadow
-  };
-
-  const originalActionDisplay = actionBox ? actionBox.style.display : "";
+  let tempWrapper = null;
 
   try {
-    if (actionBox) actionBox.style.display = "none";
+    const clone = originalSlip.cloneNode(true);
 
-    slip.style.width = "420px";
-    slip.style.maxWidth = "420px";
-    slip.style.margin = "0 auto";
-    slip.style.transform = "none";
-    slip.style.boxShadow = "none";
+    const actions = clone.querySelector(".slip-actions");
+    if (actions) actions.remove();
+
+    const originalCanvas = document.getElementById("qrCanvas");
+    const clonedCanvas = clone.querySelector("#qrCanvas");
+
+    if (originalCanvas && clonedCanvas) {
+      const qrImg = document.createElement("img");
+      qrImg.src = originalCanvas.toDataURL("image/png");
+      qrImg.alt = "QR Code";
+      qrImg.style.width = "88px";
+      qrImg.style.height = "88px";
+      qrImg.style.display = "block";
+      clonedCanvas.replaceWith(qrImg);
+    }
+
+    tempWrapper = document.createElement("div");
+    tempWrapper.style.position = "fixed";
+    tempWrapper.style.left = "-99999px";
+    tempWrapper.style.top = "0";
+    tempWrapper.style.background = "#ffffff";
+    tempWrapper.style.padding = "0";
+    tempWrapper.style.margin = "0";
+    tempWrapper.style.zIndex = "-1";
+
+    clone.style.width = "372px";
+    clone.style.maxWidth = "372px";
+    clone.style.margin = "0 auto";
+    clone.style.boxShadow = "none";
+    clone.style.transform = "none";
+    clone.style.background = "#ffffff";
+
+    tempWrapper.appendChild(clone);
+    document.body.appendChild(tempWrapper);
 
     await new Promise(resolve => setTimeout(resolve, 150));
 
-    const canvas = await html2canvas(slip, {
+    const canvas = await html2canvas(clone, {
       scale: 3,
       useCORS: true,
       backgroundColor: "#ffffff",
       logging: false
     });
 
-    const trimmedCanvas = document.createElement("canvas");
-    const ctx = trimmedCanvas.getContext("2d");
-
-    trimmedCanvas.width = canvas.width;
-    trimmedCanvas.height = canvas.height;
-
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, trimmedCanvas.width, trimmedCanvas.height);
-    ctx.drawImage(canvas, 0, 0);
-
     const link = document.createElement("a");
     link.download = "National_ID_Appointment_Slip.png";
-    link.href = trimmedCanvas.toDataURL("image/png");
+    link.href = canvas.toDataURL("image/png");
     link.click();
 
   } catch (err) {
     console.error("downloadSlip error:", err);
     showSystemMessage("Download Error", "Unable to generate appointment slip image.");
   } finally {
-    slip.style.width = originalStyles.width;
-    slip.style.maxWidth = originalStyles.maxWidth;
-    slip.style.margin = originalStyles.margin;
-    slip.style.transform = originalStyles.transform;
-    slip.style.boxShadow = originalStyles.boxShadow;
-
-    if (actionBox) actionBox.style.display = originalActionDisplay;
+    if (tempWrapper && tempWrapper.parentNode) {
+      tempWrapper.parentNode.removeChild(tempWrapper);
+    }
   }
 };
 
