@@ -1537,3 +1537,21 @@ button:disabled {
   margin: 0 auto 2px !important;
   color: #667085 !important;
 }
+/* ================= FINAL SUBTITLE CENTER FIX ================= */
+
+#slipContent .slip-card {
+  text-align: center !important;
+}
+
+#slipContent .slip-subtitle,
+#printableSlip .slip-subtitle,
+.slip-card .slip-subtitle,
+p.slip-subtitle {
+  display: block !important;
+  width: 100% !important;
+  margin: 0 auto 2px !important;
+  text-align: center !important;
+  color: #667085 !important;
+  font-size: 9.5px !important;
+  line-height: 1.3 !important;
+}
