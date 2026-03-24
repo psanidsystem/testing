@@ -170,8 +170,8 @@
       <li>PSA-issued Certificate of Live Birth and one (1) government-issued identification document which bears a full name, front-facing photograph, and signature or thumb mark;</li>
       <li>Philippine Passport or ePassport issued by the Department of Foreign Affairs (DFA)</li>
       <li>UMID (GSIS or SSS)</li>
-      <li>Unified Multi-purpose ldentification (UMID) Card issued by the Government Service lnsurance System (GSIS) or Social Security Systen (SSS)</li>
-      <li>Student’s License Permit or Non- Professional/Professional Driver’s License issued by the LTO</li>
+      <li>Unified Multi-purpose Identification (UMID) Card issued by the Government Service Insurance System (GSIS) or Social Security System (SSS)</li>
+      <li>Student’s License Permit or Non-Professional/Professional Driver’s License issued by the LTO</li>
     </ul>
 
     <p class="note">
@@ -180,7 +180,7 @@
 
     <h4>SECONDARY SUPPORTING DOCUMENTS</h4>
     <ul>
-      <li>PSA-issued Certificate of Live Birth/National Statistics Office (NSO)-issued Certificate of Live Blrth with Birth Reference Number (BreN)</li>
+      <li>PSA-issued Certificate of Live Birth/National Statistics Office (NSO)-issued Certificate of Live Birth with Birth Reference Number (BreN)</li>
       <li>Local Civil Registry Office (LCRO)-issued Certificate of Live Birth</li>
       <li>PSA-issued Report of Birth</li>
       <li>PSA-issued Certificate of Foundling</li>
@@ -188,30 +188,30 @@
       <li>Professional Regulatory Commission (PRC) ID</li>
       <li>Seaman’s Book (Seafarer’s Record Book)</li>
       <li>Overseas Workers Welfare Administration (OWWA) ID</li>
-      <li>Senior Citizen’s lD issued by the Office of Senior Citizens Affairs (OSCA) and/or LocalGovernment Units (LGU)</li>
-      <li>Social Security System (SSS) lD</li>
+      <li>Senior Citizen’s ID issued by the Office of Senior Citizens Affairs (OSCA) and/or Local Government Units (LGU)</li>
+      <li>Social Security System (SSS) ID</li>
       <li>Pantawid Pamilyang Pilipino Program (4Ps) ID</li>
       <li>License to Own or Possess Firearms (LTOPF)</li>
-      <li>National Bureau of lnvestigation (NBl) Clearance</li>
+      <li>National Bureau of Investigation (NBI) Clearance</li>
       <li>Police Clearance/ID</li>
       <li>Solo Parent’s ID</li>
-      <li>Person with Disability (PWD) lD issued by the National Council of Disability Affairs (NCDA) or its regional counterpart, Office of the Mayor, Department of Social Welfare and Development (DSWD) Office and other participating organizations with a Memorandum of Agreement with the Department of Health (DOH)</li>
-      <li>Voter’s lD issued by the Commission on Elections (COMELEC)</li>
-      <li>Postal lD issued by the Philippine Postal Corporation (PhlPost)</li>
-      <li>Taxpayer ldentification Number (TlN) ID</li>
+      <li>Person with Disability (PWD) ID issued by the National Council of Disability Affairs (NCDA) or its regional counterpart, Office of the Mayor, Department of Social Welfare and Development (DSWD) Office and other participating organizations with a Memorandum of Agreement with the Department of Health (DOH)</li>
+      <li>Voter’s ID issued by the Commission on Elections (COMELEC)</li>
+      <li>Postal ID issued by the Philippine Postal Corporation (PhilPost)</li>
+      <li>Taxpayer Identification Number (TIN) ID</li>
       <li>PhilHealth ID</li>
       <li>Special Resident Retiree’s Visa (SRRV) issued by the Philippine Retirement Authority (PRA)</li>
       <li>National ID from other countries</li>
       <li>Residence ID from other countries</li>
-      <li>Professional ldentification Card issued by the Maritime lndustry Authority (MARINA)</li>
+      <li>Professional Identification Card issued by the Maritime Industry Authority (MARINA)</li>
       <li>Eligibility Card issued by the Civil Service Commission</li>
-      <li>Dependent’s lD lssued by the Armed Forces of the Philippines (AFP) and Philippine National Police (PNP)</li>
+      <li>Dependent’s ID issued by the Armed Forces of the Philippines (AFP) and Philippine National Police (PNP)</li>
     </ul>
 
     <h4>The following identification documents shall be accepted as secondary supporting documents provided that they have a front-facing photograph, signature/thumbmark, full name, permanent address, and date of birth.</h4>
     <ul>
       <li>Employee ID</li>
-      <li>School ID (for pre-school, elementary and signature/thumbmark of the lD owner is not required)</li>
+      <li>School ID (for pre-school and elementary, signature/thumbmark of the ID owner is not required)</li>
       <li>City / Municipal ID</li>
       <li>Barangay Clearance / Certificate / ID</li>
       <li>Barangay ID</li>
@@ -526,6 +526,17 @@ let activeCalendarRequestId = 0;
 
 /* ================= UTILITIES ================= */
 
+function postJson(payload, options = {}) {
+  return fetch(EXEC_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "text/plain;charset=UTF-8"
+    },
+    body: JSON.stringify(payload),
+    ...options
+  });
+}
+
 function setFormDisabled(disabled) {
   const formCard = document.getElementById("mainFormCard");
   const service = document.getElementById("service");
@@ -714,15 +725,54 @@ function resetForm() {
   ["nidModal", "updateModal", "ephilidModal", "trnModal"].forEach(id => closeModal(id));
 }
 
+function sendConfirmationEmailInBackground(payload) {
+  const email = String(payload.email || "").trim();
+  if (!email) return;
+
+  const body = JSON.stringify({
+    action: "sendConfirmationEmail",
+    refCode: payload.refCode || "",
+    fullname: payload.fullname || "",
+    service: payload.service || "",
+    date: payload.date || "",
+    time: payload.time || "",
+    email: email
+  });
+
+  try {
+    if (navigator.sendBeacon) {
+      const blob = new Blob([body], { type: "text/plain;charset=UTF-8" });
+      const queued = navigator.sendBeacon(EXEC_URL, blob);
+      if (queued) return;
+    }
+  } catch (err) {
+    console.error("sendBeacon email error:", err);
+  }
+
+  fetch(EXEC_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "text/plain;charset=UTF-8"
+    },
+    body: body,
+    keepalive: true
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status !== "success") {
+        console.error("Background email failed:", data);
+      }
+    })
+    .catch(err => {
+      console.error("Background email fetch error:", err);
+    });
+}
+
 /* ================= SETTINGS ================= */
 
 async function loadSystemSettings() {
   try {
-    const res = await fetch(EXEC_URL, {
-      method: "POST",
-      body: JSON.stringify({ action: "getSystemSettings" })
-    });
-
+    const res = await postJson({ action: "getSystemSettings" });
     const data = await res.json();
 
     if (data.status === "success" && data.systemSettings) {
@@ -852,14 +902,12 @@ function checkSlots() {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 20000);
 
-  fetch(EXEC_URL, {
-    method: "POST",
-    body: JSON.stringify({
-      action: "slots",
-      date,
-      service,
-      time
-    }),
+  postJson({
+    action: "slots",
+    date,
+    service,
+    time
+  }, {
     signal: controller.signal
   })
     .then(res => res.json())
@@ -1203,18 +1251,17 @@ window.submitForm = function() {
   loader.style.display = "inline-block";
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 20000);
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-  fetch(EXEC_URL, {
-    method: "POST",
-    body: JSON.stringify({
-      service,
-      fullname,
-      email,
-      phone,
-      date,
-      time
-    }),
+  postJson({
+    action: "submitAppointment",
+    service,
+    fullname,
+    email,
+    phone,
+    date,
+    time
+  }, {
     signal: controller.signal
   })
     .then(res => res.json())
@@ -1272,6 +1319,17 @@ window.submitForm = function() {
         drawSlipQR(qrPayload);
         openModal("slipModal");
 
+        if (email) {
+          sendConfirmationEmailInBackground({
+            refCode: r.refCode,
+            fullname: fullname.toUpperCase(),
+            service: service,
+            date: date,
+            time: time,
+            email: email
+          });
+        }
+
         const calendar = document.getElementById("date")._flatpickr;
         if (calendar) {
           fetchMonthlyData(calendar);
@@ -1293,7 +1351,10 @@ window.submitForm = function() {
       console.error("submitForm error:", err);
 
       if (err.name === "AbortError") {
-        showSystemMessage("Request Timeout", "The server took too long to respond. Please try again.");
+        showSystemMessage(
+          "Request Timeout",
+          "The server took too long to respond. Your appointment may already have been saved. Please wait a moment before submitting again."
+        );
         return;
       }
 
@@ -1316,13 +1377,10 @@ function fetchMonthlyData(instance) {
   const currentMonth = normalizeMonthString(instance.currentYear, instance.currentMonth);
   const requestId = ++activeCalendarRequestId;
 
-  fetch(EXEC_URL, {
-    method: "POST",
-    body: JSON.stringify({
-      action: "monthlySlots",
-      service: service,
-      month: currentMonth
-    })
+  postJson({
+    action: "monthlySlots",
+    service: service,
+    month: currentMonth
   })
     .then(res => res.json())
     .then(data => {
