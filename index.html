@@ -398,12 +398,9 @@
       </div>
     </div>
 
-    <div id="confirmProcessingBox" class="confirm-processing-box">
-      <span class="confirm-processing-spinner"></span>
-      <div class="confirm-processing-text">
-        <strong id="confirmProcessingTitle">Processing Appointment...</strong>
-        <span id="confirmProcessingMessage">Please wait while we save your appointment request.</span>
-      </div>
+    <div id="confirmStatus" class="confirm-status" style="display:none;">
+      <span class="confirm-spinner"></span>
+      <span id="confirmStatusText">Processing appointment...</span>
     </div>
 
     <div class="confirm-actions">
@@ -433,7 +430,7 @@
 
       <div class="slip-qr-wrap">
         <div class="slip-qr-box">
-          <canvas id="qrCanvas" width="120" height="120"></canvas>
+          <canvas id="qrCanvas" width="88" height="88"></canvas>
         </div>
         <div class="slip-qr-note">Scan for appointment verification</div>
       </div>
@@ -486,7 +483,7 @@
           write down your <strong>Reference Number</strong> and present it during your visit.
         </p>
       </div>
-      
+
       <div class="slip-note">
         Present this slip or your Reference Number upon arrival.
       </div>
@@ -526,7 +523,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-const EXEC_URL = "https://script.google.com/macros/s/AKfycbzhjItkGFTp4bcGkFiE6Je8l9ZtnbsDBDECKS92Z7yAp9pxRE6pYRDa3uP9sIpDZxaDZg/exec";
+const EXEC_URL = "https://script.google.com/macros/s/AKfycbxX_0IvUJD9bf1W71hPYUOsv59cnVSzlwMOenXnEQIiwlzcL8f8XWtk-l4mE5cMjXlN/exec";
 
 const DEFAULT_SLOTS = {
   "National ID Registration": 32,
@@ -544,6 +541,7 @@ let systemSettings = {
 };
 let bookingWindowEndDate = null;
 let activeCalendarRequestId = 0;
+let systemMessageAutoTimer = null;
 
 /* ================= UTILITIES ================= */
 
@@ -606,6 +604,23 @@ function showSystemMessage(title, message) {
   document.getElementById("systemTitle").textContent = title;
   document.getElementById("systemMessage").textContent = message;
   openModal("systemModal");
+}
+
+function showSystemMessageAuto(title, message, callback, delay = 1400) {
+  if (systemMessageAutoTimer) {
+    clearTimeout(systemMessageAutoTimer);
+    systemMessageAutoTimer = null;
+  }
+
+  document.getElementById("systemTitle").textContent = title;
+  document.getElementById("systemMessage").textContent = message;
+  openModal("systemModal");
+
+  systemMessageAutoTimer = setTimeout(() => {
+    closeModal("systemModal");
+    systemMessageAutoTimer = null;
+    if (typeof callback === "function") callback();
+  }, delay);
 }
 
 function agreePrivacy() {
@@ -697,25 +712,39 @@ function drawSlipQR(text) {
   new QRious({
     element: qrCanvas,
     value: text,
-    size: 120,
+    size: 88,
     level: "H",
     background: "white",
     foreground: "black"
   });
 }
 
-function resetConfirmButtons() {
+function setConfirmLoading(isLoading, message = "Processing appointment...") {
   const primaryBtn = document.querySelector(".confirm-primary");
   const secondaryBtn = document.querySelector(".confirm-secondary");
+  const statusBox = document.getElementById("confirmStatus");
+  const statusText = document.getElementById("confirmStatusText");
+
+  if (statusText) {
+    statusText.textContent = message;
+  }
+
+  if (statusBox) {
+    statusBox.style.display = isLoading ? "flex" : "none";
+  }
 
   if (primaryBtn) {
-    primaryBtn.disabled = false;
-    primaryBtn.textContent = "Confirm Appointment";
+    primaryBtn.disabled = isLoading;
+    primaryBtn.textContent = isLoading ? "Processing Appointment..." : "Confirm Appointment";
   }
 
   if (secondaryBtn) {
-    secondaryBtn.disabled = false;
+    secondaryBtn.disabled = isLoading;
   }
+}
+
+function resetConfirmButtons() {
+  setConfirmLoading(false, "Processing appointment...");
 }
 
 function resetSlotInfo() {
@@ -750,43 +779,95 @@ function sendConfirmationEmailInBackground(payload) {
   const email = String(payload.email || "").trim();
   if (!email) return;
 
-  const body = JSON.stringify({
-    action: "sendConfirmationEmail",
-    refCode: payload.refCode || "",
-    fullname: payload.fullname || "",
-    service: payload.service || "",
-    date: payload.date || "",
-    time: payload.time || "",
-    email: email
-  });
-
-  try {
-    if (navigator.sendBeacon) {
-      const blob = new Blob([body], { type: "text/plain;charset=UTF-8" });
-      const queued = navigator.sendBeacon(EXEC_URL, blob);
-      if (queued) return;
-    }
-  } catch (err) {
-    console.error("sendBeacon email error:", err);
-  }
-
   fetch(EXEC_URL, {
     method: "POST",
     headers: {
       "Content-Type": "text/plain;charset=UTF-8"
     },
-    body: body,
-    keepalive: true
+    body: JSON.stringify({
+      action: "sendConfirmationEmail",
+      refCode: payload.refCode || "",
+      fullname: payload.fullname || "",
+      service: payload.service || "",
+      date: payload.date || "",
+      time: payload.time || "",
+      email: email
+    })
   })
     .then(res => res.json())
     .then(data => {
+      console.log("Email background response:", data);
+
+      if (data.status === "quota_exceeded") {
+        console.warn("Booking saved, but email not sent because daily email quota is exhausted.");
+        return;
+      }
+
       if (data.status !== "success") {
-        console.error("Background email failed:", data);
+        console.error("Background email failed:", data.message || data);
       }
     })
     .catch(err => {
       console.error("Background email fetch error:", err);
     });
+}
+
+function openSlipWithReference(refCode, fullname, service, date, time) {
+  closeModal("confirmModal");
+
+  dailySlotCache = {};
+  monthlyBooked = {};
+
+  document.getElementById("sRef").textContent = refCode;
+  document.getElementById("sName").textContent = fullname.toUpperCase();
+  document.getElementById("sService").textContent = service;
+  document.getElementById("sDate").textContent = formatAppointmentDate(date);
+  document.getElementById("sTime").textContent = time;
+
+  const qrPayload =
+    "Reference: " + refCode + "\n" +
+    "Name: " + fullname.toUpperCase() + "\n" +
+    "Service: " + service + "\n" +
+    "Date: " + formatAppointmentDate(date) + "\n" +
+    "Time: " + time;
+
+  drawSlipQR(qrPayload);
+  openModal("slipModal");
+
+  const calendar = document.getElementById("date")._flatpickr;
+  if (calendar) {
+    fetchMonthlyData(calendar);
+  }
+}
+
+async function verifyTimedOutBooking(payload, retries = 4, delayMs = 2000) {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const res = await postJson({
+        action: "checkRecentBooking",
+        service: payload.service,
+        fullname: payload.fullname,
+        email: payload.email,
+        phone: payload.phone,
+        date: payload.date,
+        time: payload.time
+      });
+
+      const data = await res.json();
+
+      if (data.status === "found" && data.refCode) {
+        return data;
+      }
+    } catch (err) {
+      console.error("verifyTimedOutBooking error:", err);
+    }
+
+    if (attempt < retries - 1) {
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
+
+  return null;
 }
 
 /* ================= SETTINGS ================= */
@@ -862,18 +943,7 @@ function openConfirmModal() {
 }
 
 function confirmSubmit() {
-  const primaryBtn = document.querySelector(".confirm-primary");
-  const secondaryBtn = document.querySelector(".confirm-secondary");
-
-  if (primaryBtn) {
-    primaryBtn.disabled = true;
-    primaryBtn.textContent = "Processing Appointment...";
-  }
-
-  if (secondaryBtn) {
-    secondaryBtn.disabled = true;
-  }
-
+  setConfirmLoading(true, "Submitting your appointment. Please wait...");
   submitForm();
 }
 
@@ -951,7 +1021,13 @@ window.closeNidModal = () => closeModal("nidModal");
 window.closeUpdateModal = () => closeModal("updateModal");
 window.closeEphilidModal = () => closeModal("ephilidModal");
 window.closeTrnModal = () => closeModal("trnModal");
-window.closeSystemModal = () => closeModal("systemModal");
+window.closeSystemModal = () => {
+  if (systemMessageAutoTimer) {
+    clearTimeout(systemMessageAutoTimer);
+    systemMessageAutoTimer = null;
+  }
+  closeModal("systemModal");
+};
 
 /* ================= SLIP ACTIONS ================= */
 
@@ -978,17 +1054,20 @@ window.printSlip = function() {
 
   if (qrCanvas) {
     const qrDataUrl = qrCanvas.toDataURL("image/png");
-
     slipHtml = slipHtml.replace(
       /<canvas id="qrCanvas"[^>]*><\/canvas>/i,
-      `<img src="${qrDataUrl}" alt="QR Code" style="width:130px;height:130px;display:block;">`
+      `<img src="${qrDataUrl}" alt="QR Code" style="width:88px;height:88px;display:block;">`
     );
   }
+
+  slipHtml = slipHtml.replace(
+    /<div class="slip-actions compact-actions" data-no-export="true">[\s\S]*?<\/div>/i,
+    ""
+  );
 
   const printStyles = `
     <style>
       * { box-sizing: border-box; }
-
       html, body {
         margin: 0;
         padding: 0;
@@ -996,17 +1075,12 @@ window.printSlip = function() {
         font-family: "Segoe UI", Arial, sans-serif;
         color: #1f2937;
       }
-
-      body {
-        padding: 18px;
-      }
-
+      body { padding: 18px; }
       #printArea {
         width: 100%;
         max-width: 540px;
         margin: 0 auto;
       }
-
       .slip-card {
         width: 100%;
         border-radius: 20px;
@@ -1014,7 +1088,6 @@ window.printSlip = function() {
         background: #ffffff;
         border: 1px solid #dbe4ef;
       }
-
       .slip-header {
         display: flex;
         justify-content: center;
@@ -1022,13 +1095,11 @@ window.printSlip = function() {
         gap: 10px;
         margin-bottom: 8px;
       }
-
       .slip-logo {
         width: 52px;
         height: 52px;
         object-fit: contain;
       }
-
       .slip-title {
         text-align: center;
         margin: 0 0 4px;
@@ -1037,43 +1108,39 @@ window.printSlip = function() {
         font-weight: 800;
         line-height: 1.2;
       }
-
       .slip-subtitle {
+        display: block;
+        width: 100%;
         text-align: center;
-        margin: 0;
+        margin: 0 auto;
         color: #667085;
         font-size: 12px;
         line-height: 1.4;
       }
-
       .slip-divider {
         height: 2px;
         background: #1f5aa8;
         margin: 12px 0;
         border-radius: 999px;
       }
-
       .slip-qr-wrap {
         display: flex;
         flex-direction: column;
         align-items: center;
         margin: 2px 0 14px;
       }
-
       .slip-qr-box {
         background: #ffffff;
         padding: 8px;
         border-radius: 12px;
         border: 1px solid #dbe5f0;
       }
-
       .slip-qr-note {
         margin-top: 6px;
         font-size: 11px;
         color: #667085;
         text-align: center;
       }
-
       .slip-details {
         display: grid;
         gap: 0;
@@ -1082,7 +1149,6 @@ window.printSlip = function() {
         overflow: hidden;
         background: #fcfdff;
       }
-
       .slip-item {
         display: grid;
         grid-template-columns: 135px 1fr;
@@ -1091,11 +1157,9 @@ window.printSlip = function() {
         border-bottom: 1px solid #e5edf6;
         align-items: start;
       }
-
       .slip-item:last-child {
         border-bottom: none;
       }
-
       .slip-label {
         font-size: 11px;
         font-weight: 700;
@@ -1104,7 +1168,6 @@ window.printSlip = function() {
         letter-spacing: 0.06em;
         padding-top: 2px;
       }
-
       .slip-value {
         font-size: 14px;
         font-weight: 700;
@@ -1113,13 +1176,28 @@ window.printSlip = function() {
         text-align: right;
         word-break: break-word;
       }
-
-      .slip-item-address .slip-value {
-        font-weight: 600;
+      .slip-reminder {
+        margin-top: 12px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: #fff8e8;
+        border: 1px solid #f2d38a;
+        color: #6b4e16;
       }
-
+      .slip-reminder-title {
+        font-size: 12px;
+        font-weight: 800;
+        text-align: center;
+        margin-bottom: 6px;
+      }
+      .slip-reminder-text {
+        margin: 0;
+        font-size: 11px;
+        line-height: 1.4;
+        text-align: center;
+      }
       .slip-note {
-        margin: 12px 0 0;
+        margin: 10px 0 0;
         padding: 10px 12px;
         border-radius: 12px;
         background: #f4f8ff;
@@ -1129,25 +1207,16 @@ window.printSlip = function() {
         line-height: 1.45;
         text-align: center;
       }
-
       .slip-actions {
         display: none !important;
       }
-
-      img {
-        max-width: 100%;
-      }
-
+      img { max-width: 100%; }
       @media print {
         @page {
           size: auto;
           margin: 10mm;
         }
-
-        body {
-          padding: 0;
-        }
-
+        body { padding: 0; }
         #printArea {
           max-width: 540px;
           margin: 0 auto;
@@ -1187,8 +1256,7 @@ window.downloadSlip = async function() {
   try {
     const clone = originalSlip.cloneNode(true);
 
-    const actions = clone.querySelector(".slip-actions");
-    if (actions) actions.remove();
+    clone.querySelectorAll('[data-no-export="true"], .slip-actions').forEach(el => el.remove());
 
     const originalCanvas = document.getElementById("qrCanvas");
     const clonedCanvas = clone.querySelector("#qrCanvas");
@@ -1222,7 +1290,7 @@ window.downloadSlip = async function() {
     tempWrapper.appendChild(clone);
     document.body.appendChild(tempWrapper);
 
-    await new Promise(resolve => setTimeout(resolve, 150));
+    await new Promise(resolve => setTimeout(resolve, 180));
 
     const canvas = await html2canvas(clone, {
       scale: 3,
@@ -1248,7 +1316,7 @@ window.downloadSlip = async function() {
 
 /* ================= SUBMIT FORM ================= */
 
-window.submitForm = function() {
+window.submitForm = async function() {
   const btn = document.getElementById("submitBtn");
   const btnText = document.getElementById("btnText");
   const loader = document.getElementById("btnLoader");
@@ -1279,113 +1347,115 @@ window.submitForm = function() {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-  postJson({
-    action: "submitAppointment",
-    service,
-    fullname,
-    email,
-    phone,
-    date,
-    time
-  }, {
-    signal: controller.signal
-  })
-    .then(res => res.json())
-    .then(r => {
-      clearTimeout(timeoutId);
+  try {
+    const res = await postJson({
+      action: "submitAppointment",
+      service,
+      fullname,
+      email,
+      phone,
+      date,
+      time
+    }, {
+      signal: controller.signal
+    });
 
-      btn.disabled = false;
-      btnText.style.display = "inline";
-      loader.style.display = "none";
+    const r = await res.json();
+    clearTimeout(timeoutId);
+
+    btn.disabled = false;
+    btnText.style.display = "inline";
+    loader.style.display = "none";
+    resetConfirmButtons();
+
+    if (r.status === "error") {
+      return showSystemMessage("Notice", r.message || "System error.");
+    }
+
+    if (r.status === "duplicate_name") {
+      return showSystemMessage("Duplicate Appointment", "You already have an appointment on this date.");
+    }
+
+    if (r.status === "duplicate_email") {
+      return showSystemMessage("Duplicate Email", "This email already has an appointment on this date.");
+    }
+
+    if (r.status === "duplicate_phone") {
+      return showSystemMessage("Duplicate Phone", "This mobile number already has an appointment on this date.");
+    }
+
+    if (r.status === "closed_date") {
+      return showSystemMessage("Booking Closed", r.reason || "Booking is not available on the selected date.");
+    }
+
+    if (r.status === "daily_full") {
+      return showSystemMessage("Fully Booked", "This service is fully booked on the selected date and time.");
+    }
+
+    if (r.status === "success") {
+      openSlipWithReference(r.refCode, fullname, service, date, time);
+
+      if (email) {
+        sendConfirmationEmailInBackground({
+          refCode: r.refCode,
+          fullname: fullname.toUpperCase(),
+          service: service,
+          date: date,
+          time: time,
+          email: email
+        });
+      }
+
+      return;
+    }
+
+    showSystemMessage("Notice", r.message || "Unexpected response from server.");
+
+  } catch (err) {
+    clearTimeout(timeoutId);
+
+    btn.disabled = false;
+    btnText.style.display = "inline";
+    loader.style.display = "none";
+
+    console.error("submitForm error:", err);
+
+    if (err.name === "AbortError") {
+      setConfirmLoading(true, "Request timed out. Checking if your booking was recorded...");
+
+      const verified = await verifyTimedOutBooking({
+        service,
+        fullname,
+        email,
+        phone,
+        date,
+        time
+      });
+
       resetConfirmButtons();
 
-      if (r.status === "error") {
-        return showSystemMessage("Notice", r.message || "System error.");
-      }
-
-      if (r.status === "duplicate_name") {
-        return showSystemMessage("Duplicate Appointment", "You already have an appointment on this date.");
-      }
-
-      if (r.status === "duplicate_email") {
-        return showSystemMessage("Duplicate Email", "This email already has an appointment on this date.");
-      }
-
-      if (r.status === "duplicate_phone") {
-        return showSystemMessage("Duplicate Phone", "This mobile number already has an appointment on this date.");
-      }
-
-      if (r.status === "closed_date") {
-        return showSystemMessage("Booking Closed", r.reason || "Booking is not available on the selected date.");
-      }
-
-      if (r.status === "daily_full") {
-        return showSystemMessage("Fully Booked", "This service is fully booked on the selected date and time.");
-      }
-
-      if (r.status === "success") {
-        closeModal("confirmModal");
-
-        dailySlotCache = {};
-        monthlyBooked = {};
-
-        document.getElementById("sRef").textContent = r.refCode;
-        document.getElementById("sName").textContent = fullname.toUpperCase();
-        document.getElementById("sService").textContent = service;
-        document.getElementById("sDate").textContent = formatAppointmentDate(date);
-        document.getElementById("sTime").textContent = time;
-
-        const qrPayload =
-          "Reference: " + r.refCode + "\n" +
-          "Name: " + fullname.toUpperCase() + "\n" +
-          "Service: " + service + "\n" +
-          "Date: " + formatAppointmentDate(date) + "\n" +
-          "Time: " + time;
-
-        drawSlipQR(qrPayload);
-        openModal("slipModal");
-
-        if (email) {
-          sendConfirmationEmailInBackground({
-            refCode: r.refCode,
-            fullname: fullname.toUpperCase(),
-            service: service,
-            date: date,
-            time: time,
-            email: email
-          });
-        }
-
-        const calendar = document.getElementById("date")._flatpickr;
-        if (calendar) {
-          fetchMonthlyData(calendar);
-        }
-
-        return;
-      }
-
-      showSystemMessage("Notice", r.message || "Unexpected response from server.");
-    })
-    .catch(err => {
-      clearTimeout(timeoutId);
-
-      btn.disabled = false;
-      btnText.style.display = "inline";
-      loader.style.display = "none";
-      resetConfirmButtons();
-
-      console.error("submitForm error:", err);
-
-      if (err.name === "AbortError") {
-        showSystemMessage(
-          "Request Timeout",
-          "The server took too long to respond. Your appointment may already have been saved. Please wait a moment before submitting again."
+      if (verified && verified.refCode) {
+        showSystemMessageAuto(
+          "Booking Recorded",
+          "Your appointment was successfully recorded. Opening your appointment slip...",
+          () => {
+            openSlipWithReference(verified.refCode, fullname, service, date, time);
+          },
+          1500
         );
         return;
       }
 
-      showSystemMessage("System Error", "Unable to connect to server.");
-    });
+      showSystemMessage(
+        "Still Verifying",
+        "The request timed out and we could not yet confirm the booking. Please wait a few seconds before trying again to avoid duplicate appointments."
+      );
+      return;
+    }
+
+    resetConfirmButtons();
+    showSystemMessage("System Error", "Unable to connect to server.");
+  }
 };
 
 /* ================= MONTHLY CALENDAR DATA ================= */
