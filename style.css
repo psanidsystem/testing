@@ -1627,3 +1627,13 @@ p.slip-subtitle {
     font-size: 11.5px;
   }
 }
+.slip-reminder.compact {
+  margin-top: 8px !important;
+  padding: 10px 12px !important;
+}
+
+.slip-reminder.compact .slip-reminder-text {
+  margin: 0 !important;
+  text-align: center !important;
+  line-height: 1.45 !important;
+}
