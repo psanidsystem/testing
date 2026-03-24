@@ -425,7 +425,7 @@
 
       <div class="slip-qr-wrap">
         <div class="slip-qr-box">
-          <canvas id="qrCanvas" width="130" height="130"></canvas>
+          <canvas id="qrCanvas" width="120" height="120"></canvas>
         </div>
         <div class="slip-qr-note">Scan for appointment verification</div>
       </div>
@@ -465,18 +465,28 @@
           <div class="slip-label">Center</div>
           <div class="slip-value">
             National ID Fixed Registration Center<br>
-            3rd Floor, Gaisano Capital South, Cebu City
+            3rd Floor, Gaisano Capital South,<br>
+            Cebu City
           </div>
         </div>
       </div>
 
+      <div class="slip-reminder">
+        <div class="slip-reminder-title">Important Reminder</div>
+        <ul class="slip-reminder-list">
+          <li>Please take a screenshot, download, or print this appointment slip immediately.</li>
+          <li>If you are unable to save this slip, please write down your Reference Number and present it during your visit.</li>
+          <li>Please present this appointment slip or your Reference Number to the personnel upon arrival.</li>
+        </ul>
+      </div>
+
       <div class="slip-note">
-        Please present this appointment slip during your scheduled visit.
+        Kindly keep a copy of this appointment slip for verification purposes.
       </div>
 
       <div class="slip-actions">
-        <button type="button" onclick="printSlip()">Print</button>
-        <button type="button" onclick="downloadSlip()">Download</button>
+        <button type="button" onclick="printSlip()">Print Slip</button>
+        <button type="button" onclick="downloadSlip()">Download Slip</button>
         <button type="button" class="secondary" onclick="closeSlip()">Close</button>
       </div>
 
