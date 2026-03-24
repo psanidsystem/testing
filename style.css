@@ -1530,3 +1530,10 @@ button:disabled {
     grid-template-columns: 1fr 1fr !important;
   }
 }
+.slip-subtitle {
+  display: block !important;
+  width: 100% !important;
+  text-align: center !important;
+  margin: 0 auto 2px !important;
+  color: #667085 !important;
+}
