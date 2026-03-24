@@ -1637,3 +1637,9 @@ p.slip-subtitle {
   text-align: center !important;
   line-height: 1.45 !important;
 }
+#fullname:disabled,
+#email:disabled,
+#phone:disabled,
+#submitBtn:disabled {
+  opacity: 0.75;
+}
