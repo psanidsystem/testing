@@ -534,6 +534,7 @@ let systemSettings = {
 };
 let bookingWindowEndDate = null;
 let activeCalendarRequestId = 0;
+let monthlySlotCache = {};
 let systemMessageAutoTimer = null;
 
 /* ================= UTILITIES ================= */
@@ -583,6 +584,62 @@ function setFormDisabled(disabled) {
   }
 }
 
+function setDateInputDisabled(disabled) {
+  const dateInput = document.getElementById("date");
+  if (!dateInput) return;
+
+  dateInput.disabled = disabled;
+
+  if (dateInput._flatpickr) {
+    if (dateInput._flatpickr.altInput) {
+      dateInput._flatpickr.altInput.disabled = disabled;
+    }
+    if (disabled) {
+      dateInput._flatpickr.close();
+    }
+  }
+}
+
+function setTimeInputDisabled(disabled) {
+  const time = document.getElementById("time");
+  if (time) time.disabled = disabled;
+}
+
+function setApplicantFieldsDisabled(disabled) {
+  const fullname = document.getElementById("fullname");
+  const email = document.getElementById("email");
+  const phone = document.getElementById("phone");
+  const submitBtn = document.getElementById("submitBtn");
+
+  if (fullname) fullname.disabled = disabled;
+  if (email) email.disabled = disabled;
+  if (phone) phone.disabled = disabled;
+  if (submitBtn) submitBtn.disabled = disabled;
+}
+
+function setAvailabilityInfo(message, color = "#4b5563") {
+  const info = document.getElementById("serviceInfoText");
+  if (!info) return;
+  info.innerHTML = message || "";
+  info.style.color = color;
+}
+
+function lockBookingInputs(message = "Select a service first to load available dates.") {
+  setApplicantFieldsDisabled(true);
+  setAvailabilityInfo(message, "#4b5563");
+}
+
+function applySlotAvailabilityResult(data) {
+  const remaining = Number(data && data.remaining ? data.remaining : 0);
+  renderSlotInfo(data, document.getElementById("serviceInfoText"));
+
+  if (data && data.open !== false && remaining > 0) {
+    setApplicantFieldsDisabled(false);
+  } else {
+    setApplicantFieldsDisabled(true);
+  }
+}
+
 function openModal(id) {
   const modal = document.getElementById(id);
   if (modal) modal.style.display = "flex";
@@ -619,6 +676,12 @@ function showSystemMessageAuto(title, message, callback, delay = 1400) {
 function agreePrivacy() {
   closeModal("privacyModal");
   setFormDisabled(false);
+
+  setDateInputDisabled(true);
+  setTimeInputDisabled(true);
+  setApplicantFieldsDisabled(true);
+
+  setAvailabilityInfo("Select a service first to load available dates.");
 }
 
 function normalizeMonthString(year, monthIndexZeroBased) {
@@ -968,20 +1031,31 @@ function checkSlots() {
   const time = document.getElementById("time").value;
   const info = document.getElementById("serviceInfoText");
 
-  if (!service || !date || !time) {
-    resetSlotInfo();
+  setApplicantFieldsDisabled(true);
+
+  if (!service) {
+    setAvailabilityInfo("Select a service first to load available dates.");
+    return;
+  }
+
+  if (!date) {
+    setAvailabilityInfo("Select a preferred date first.");
+    return;
+  }
+
+  if (!time) {
+    setAvailabilityInfo("Select a preferred time to check available slot.");
     return;
   }
 
   const cacheKey = `${service}_${date}_${time}`;
 
   if (dailySlotCache[cacheKey]) {
-    renderSlotInfo(dailySlotCache[cacheKey], info);
+    applySlotAvailabilityResult(dailySlotCache[cacheKey]);
     return;
   }
 
-  info.innerHTML = "⏳ Checking available slots...";
-  info.style.color = "#555";
+  setAvailabilityInfo("⏳ Checking available slot...", "#555");
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 20000);
@@ -998,13 +1072,13 @@ function checkSlots() {
     .then(data => {
       clearTimeout(timeoutId);
       dailySlotCache[cacheKey] = data;
-      renderSlotInfo(data, info);
+      applySlotAvailabilityResult(data);
     })
     .catch(err => {
       clearTimeout(timeoutId);
-      info.innerHTML = "⚠ Unable to check availability.";
-      info.style.color = "red";
       console.error("checkSlots error:", err);
+      setAvailabilityInfo("⚠ Unable to check slot availability.", "red");
+      setApplicantFieldsDisabled(true);
     });
 }
 
@@ -1463,11 +1537,41 @@ function fetchMonthlyData(instance) {
     monthlyBooked = {};
     updateWeekendNotice();
     instance.redraw();
+
+    setDateInputDisabled(true);
+    setTimeInputDisabled(true);
+    setApplicantFieldsDisabled(true);
+    setAvailabilityInfo("Select a service first to load available dates.");
     return;
   }
 
   const currentMonth = normalizeMonthString(instance.currentYear, instance.currentMonth);
+  const cacheKey = `${service}__${currentMonth}`;
   const requestId = ++activeCalendarRequestId;
+
+  setDateInputDisabled(true);
+  setTimeInputDisabled(true);
+  setApplicantFieldsDisabled(true);
+  setAvailabilityInfo("⏳ Loading available dates...", "#555");
+
+  monthlyBooked = {};
+  instance.redraw();
+
+  if (monthlySlotCache[cacheKey]) {
+    const cached = monthlySlotCache[cacheKey];
+
+    monthlyBooked = cached.slots || {};
+    systemSettings = cached.systemSettings || systemSettings;
+    bookingWindowEndDate = cached.bookingWindowEndDate || bookingWindowEndDate;
+
+    updateWeekendNotice();
+    instance.redraw();
+
+    setDateInputDisabled(false);
+    setTimeInputDisabled(!document.getElementById("date").value);
+    setAvailabilityInfo("Select a preferred date and time to check available slot.");
+    return;
+  }
 
   postJson({
     action: "monthlySlots",
@@ -1482,20 +1586,30 @@ function fetchMonthlyData(instance) {
         throw new Error(data.message || "Unable to load monthly slots.");
       }
 
+      monthlySlotCache[cacheKey] = data;
       monthlyBooked = data.slots || {};
       systemSettings = data.systemSettings || systemSettings;
       bookingWindowEndDate = data.bookingWindowEndDate || bookingWindowEndDate;
 
       updateWeekendNotice();
       instance.redraw();
+
+      setDateInputDisabled(false);
+      setTimeInputDisabled(!document.getElementById("date").value);
+      setAvailabilityInfo("Select a preferred date and time to check available slot.");
     })
     .catch(err => {
       if (requestId !== activeCalendarRequestId) return;
 
+      console.error("Monthly fetch error:", err);
       monthlyBooked = {};
       updateWeekendNotice();
       instance.redraw();
-      console.error("Monthly fetch error:", err);
+
+      setDateInputDisabled(true);
+      setTimeInputDisabled(true);
+      setApplicantFieldsDisabled(true);
+      setAvailabilityInfo("⚠ Unable to load available dates. Please try again.", "red");
     });
 }
 
@@ -1520,7 +1634,10 @@ document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("date").addEventListener("change", updateSummary);
   document.getElementById("time").addEventListener("change", updateSummary);
 
-  timeSelect.addEventListener("change", checkSlots);
+  timeSelect.addEventListener("change", function() {
+  setApplicantFieldsDisabled(true);
+  checkSlots();
+});
 
   updateSummary();
 
@@ -1648,39 +1765,66 @@ document.addEventListener("DOMContentLoaded", function() {
       dayElem.setAttribute("data-tooltip", `${remaining} slots left`);
     },
 
-    onChange: function() {
-      checkSlots();
-      updateSummary();
-    }
+      onChange: function(selectedDates, dateStr, instance) {
+        dailySlotCache = {};
+        document.getElementById("time").value = "";
+        setApplicantFieldsDisabled(true);
+      
+        if (dateStr) {
+          setTimeInputDisabled(false);
+          setAvailabilityInfo("Select a preferred time to check available slot.");
+        } else {
+          setTimeInputDisabled(true);
+          setAvailabilityInfo("Select a preferred date first.");
+        }
+      
+        updateSummary();
+      }
   });
 
-  serviceSelect.addEventListener("change", function() {
-    monthlyBooked = {};
-    dailySlotCache = {};
-    resetSlotInfo();
-    calendar.clear();
-    calendar.redraw();
-    fetchMonthlyData(calendar);
-    checkSlots();
-    updateSummary();
+serviceSelect.addEventListener("change", function() {
+  monthlyBooked = {};
+  dailySlotCache = {};
+  resetSlotInfo();
 
-    ["nidModal", "updateModal", "ephilidModal", "trnModal"].forEach(id => {
-      closeModal(id);
-    });
+  document.getElementById("time").value = "";
+  document.getElementById("fullname").value = "";
+  document.getElementById("email").value = "";
+  document.getElementById("phone").value = "";
 
-    const modalMap = {
-      "National ID Registration": "nidModal",
-      "Correction/Updating of Demographic Information": "updateModal",
-      "Request National ID in Paper Format (ePhilID)": "ephilidModal",
-      "Retrieval of TRN / Other Concern": "trnModal"
-    };
+  calendar.clear();
+  calendar.redraw();
+  updateSummary();
 
-    if (modalMap[this.value]) {
-      openModal(modalMap[this.value]);
-    }
+  ["nidModal", "updateModal", "ephilidModal", "trnModal"].forEach(id => {
+    closeModal(id);
   });
 
-  document.getElementById("date").addEventListener("change", checkSlots);
+  const modalMap = {
+    "National ID Registration": "nidModal",
+    "Correction/Updating of Demographic Information": "updateModal",
+    "Request National ID in Paper Format (ePhilID)": "ephilidModal",
+    "Retrieval of TRN / Other Concern": "trnModal"
+  };
+
+  if (!this.value) {
+    setDateInputDisabled(true);
+    setTimeInputDisabled(true);
+    setApplicantFieldsDisabled(true);
+    setAvailabilityInfo("Select a service first to load available dates.");
+    return;
+  }
+
+  if (modalMap[this.value]) {
+    openModal(modalMap[this.value]);
+  }
+
+  setDateInputDisabled(true);
+  setTimeInputDisabled(true);
+  setApplicantFieldsDisabled(true);
+  setAvailabilityInfo("⏳ Loading available dates...", "#555");
+
+  fetchMonthlyData(calendar);
 });
 
 /* ================= GLOBAL MODAL CLICK ================= */
