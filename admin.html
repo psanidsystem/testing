@@ -1,0 +1,2588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>National ID Admin Dashboard</title>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --card: #ffffff;
+      --primary: #1e5aa8;
+      --primary-dark: #17407c;
+      --primary-soft: #eaf2ff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #d8e3f0;
+      --shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+      --shadow-soft: 0 4px 14px rgba(15, 23, 42, 0.04);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #f7f9fd 0%, #f3f6fb 100%);
+      color: var(--text);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 230px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: linear-gradient(180deg, #153d77 0%, #1e5aa8 100%);
+      color: #fff;
+      padding: 22px 12px;
+      border-right: 1px solid rgba(255,255,255,0.08);
+      box-shadow: inset -1px 0 0 rgba(255,255,255,0.04);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+      padding: 6px 8px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .brand img {
+      width: 54px;
+      height: 54px;
+      object-fit: contain;
+      background: rgba(255,255,255,0.12);
+      border-radius: 14px;
+      padding: 6px;
+    }
+
+    .brand h1 {
+      font-size: 18px;
+      line-height: 1.05;
+      margin: 0;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .brand p {
+      margin: 5px 0 0;
+      font-size: 12px;
+      line-height: 1.35;
+      opacity: 0.9;
+    }
+
+    .nav-group {
+      display: grid;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .nav-btn {
+      border: none;
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      text-align: left;
+      padding: 14px 16px;
+      border-radius: 16px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-btn:hover {
+      background: rgba(255,255,255,0.16);
+      transform: translateX(2px);
+    }
+
+    .nav-btn.active {
+      background: rgba(255,255,255,0.22);
+      color: #fff;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.15),
+        inset 4px 0 0 #ffffff,
+        0 8px 18px rgba(0,0,0,0.08);
+    }
+
+    .nav-icon {
+      width: 20px;
+      text-align: center;
+      font-size: 15px;
+      opacity: 0.95;
+    }
+
+    .content {
+      padding: 26px 22px 28px;
+      display: grid;
+      gap: 20px;
+      align-content: start;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .title-wrap h2 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--primary);
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+
+    .title-wrap p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      max-width: 760px;
+      line-height: 1.5;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 14px;
+      padding: 12px 18px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 10px 22px rgba(30, 90, 168, 0.22);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: #f3f7fd;
+      color: var(--primary);
+      border: 1px solid #d8e4f5;
+    }
+
+    .btn-secondary:hover {
+      background: #e7effa;
+      transform: translateY(-1px);
+    }
+
+    .actions .btn {
+      min-width: 124px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .metric-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 20px;
+      padding: 20px 18px 18px;
+      min-height: 122px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      border: 1px solid var(--border);
+    }
+
+    .metric-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 5px;
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.09);
+    }
+
+    .metric-total {
+      background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+    }
+
+    .metric-total::before {
+      background: #1e5aa8;
+    }
+
+    .metric-today {
+      background: linear-gradient(180deg, #ffffff 0%, #f4fbff 100%);
+    }
+
+    .metric-today::before {
+      background: #0891b2;
+    }
+
+    .metric-pending {
+      background: linear-gradient(180deg, #ffffff 0%, #fffaf0 100%);
+    }
+
+    .metric-pending::before {
+      background: #f59e0b;
+    }
+
+    .metric-slots {
+      background: linear-gradient(180deg, #ffffff 0%, #f7f8ff 100%);
+    }
+
+    .metric-slots::before {
+      background: #6366f1;
+    }
+
+    .metric-label {
+      color: #667085;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .metric-value {
+      font-size: 44px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      margin-bottom: 10px;
+    }
+
+    .metric-total .metric-value {
+      color: #1e5aa8;
+    }
+
+    .metric-today .metric-value {
+      color: #0891b2;
+    }
+
+    .metric-pending .metric-value {
+      color: #d97706;
+    }
+
+    .metric-slots .metric-value {
+      color: #4f46e5;
+    }
+
+    .metric-sub {
+      font-size: 12px;
+      color: #6b7280;
+      line-height: 1.4;
+    }
+
+    .panel-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 22px;
+      margin-top: 4px;
+      align-items: start;
+    }
+
+    .panel-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .panel-title h3 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .field input,
+    .field select,
+    .search-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #fff;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(30, 90, 168, 0.08);
+      background: #fff;
+    }
+
+    .search-input::placeholder,
+    .field input::placeholder {
+      color: #9aa5b1;
+    }
+
+    .panel-title .search-input {
+      max-width: 360px;
+      margin-left: auto;
+      min-width: 260px;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: #fff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      min-width: 980px;
+      background: #fff;
+    }
+
+    th,
+    td {
+      padding: 18px 14px;
+      border-bottom: 1px solid #edf2f7;
+      text-align: left;
+      font-size: 14px;
+      vertical-align: middle;
+    }
+
+    th {
+      background: #f7faff;
+      color: #64748b;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 700;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #fcfdff;
+    }
+
+    tbody tr:hover {
+      background: #f8fbff;
+    }
+
+    tbody td[colspan] {
+      padding: 22px 16px;
+      color: #64748b;
+      text-align: center;
+      background: #fbfdff;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 64px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge-confirmed {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .badge-pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-cancelled {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .mini-btn {
+      border: none;
+      border-radius: 12px;
+      padding: 7px 12px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      transition: all 0.2s ease;
+    }
+
+    .mini-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .mini-edit {
+      background: #e7efff;
+      color: #1d4ed8;
+    }
+
+    .mini-slot {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .mini-delete {
+      background: #fee9e9;
+      color: #b91c1c;
+    }
+
+    .slot-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .slot-item {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      background: #fbfdff;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .slot-item:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+    }
+
+    .slot-item strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 15px;
+    }
+
+    .slot-meta {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .slot-pill {
+      padding: 7px 11px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #eff6ff;
+      color: var(--primary);
+      white-space: nowrap;
+      min-width: 92px;
+      text-align: center;
+    }
+
+    .dashboard-shell {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(360px, 1fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .dashboard-left,
+    .dashboard-right {
+      display: grid;
+      gap: 18px;
+      align-content: start;
+    }
+
+    .dashboard-filter-card {
+      background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+      padding: 18px 22px;
+    }
+
+    .dashboard-filter-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .dashboard-filter-bar h3 {
+      margin: 0 0 4px;
+      font-size: 18px;
+      color: #111827;
+    }
+
+    .dashboard-filter-bar p {
+      margin: 0;
+      color: #667085;
+      font-size: 13px;
+    }
+
+    .compact-field {
+      min-width: 230px;
+      max-width: 260px;
+    }
+
+    .dashboard-right-top {
+      margin-top: 0;
+    }
+
+    .dashboard-left .table-wrap table {
+      min-width: 760px;
+    }
+
+    .dashboard-right .slot-list {
+      gap: 12px;
+    }
+
+    .service-breakdown {
+      display: grid;
+      gap: 12px;
+    }
+
+    .service-breakdown .slot-item {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+    }
+
+    .service-breakdown .slot-item strong {
+      font-size: 15px;
+      margin-bottom: 5px;
+    }
+
+    .service-breakdown .slot-meta {
+      font-size: 12px;
+      color: #667085;
+    }
+
+    .service-breakdown .slot-pill {
+      background: #edf4ff;
+      color: #1e5aa8;
+    }
+
+    #saveQuickSlotBtn {
+      margin-top: 6px;
+      width: 100%;
+    }
+
+    .empty-state {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 18px;
+      border: 1px dashed #cbd5e1;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #fbfdff 0%, #f8fbff 100%);
+    }
+
+    .empty-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #eef4ff;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .empty-state strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 15px;
+      color: #111827;
+    }
+
+    .empty-state p {
+      margin: 0;
+      color: #667085;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 18px;
+    }
+
+    .settings-card {
+      min-height: 260px;
+    }
+
+    .settings-text {
+      margin-top: 0;
+      margin-bottom: 18px;
+      color: #475467;
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .settings-info-list {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .settings-info-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: #fbfdff;
+    }
+
+    .settings-info-item strong {
+      color: #111827;
+      font-size: 14px;
+    }
+
+    .settings-info-item span {
+      color: #667085;
+      font-size: 13px;
+      text-align: right;
+    }
+
+    .settings-actions {
+      margin-top: auto;
+    }
+
+    .hint-text {
+      font-size: 12px;
+      color: #667085;
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.5);
+      padding: 20px;
+      z-index: 9999;
+    }
+
+    .modal.open {
+      display: flex;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 720px;
+      max-height: 90vh;
+      overflow: auto;
+      background: #fff;
+      border-radius: 24px;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+      border: 1px solid var(--border);
+      padding: 24px;
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .modal-head h3 {
+      margin: 0;
+      color: var(--primary);
+      font-size: 20px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .form-grid .full {
+      grid-column: 1 / -1;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .notice {
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+      border: 1px solid transparent;
+    }
+
+    .notice.show {
+      display: block;
+    }
+
+    .notice.success {
+      background: #dcfce7;
+      color: #166534;
+      border-color: #bbf7d0;
+    }
+
+    .notice.error {
+      background: #fee2e2;
+      color: #991b1b;
+      border-color: #fecaca;
+    }
+
+    @media (max-width: 1200px) {
+      .cards,
+      .filters,
+      .form-grid,
+      .settings-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .dashboard-shell {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 820px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        padding-bottom: 14px;
+      }
+
+      .cards,
+      .filters,
+      .form-grid,
+      .settings-grid,
+      .panel-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .content {
+        padding: 18px;
+      }
+
+      .actions {
+        width: 100%;
+      }
+
+      .actions .btn {
+        flex: 1 1 auto;
+      }
+
+      .metric-value {
+        font-size: 30px;
+      }
+
+      .brand h1 {
+        font-size: 17px;
+      }
+
+      .nav-btn {
+        font-size: 14px;
+        padding: 13px 14px;
+      }
+
+      .dashboard-filter-bar {
+        align-items: stretch;
+      }
+
+      .compact-field {
+        min-width: 100%;
+        max-width: 100%;
+      }
+
+      .panel-title .search-input {
+        max-width: 100%;
+        min-width: 100%;
+        margin-left: 0;
+      }
+
+      .settings-info-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .settings-info-item span {
+        text-align: left;
+      }
+      #dashboardSection,
+#bookingsSection,
+#slotsSection,
+#availabilitySection,
+#usersSection,
+#settingsSection {
+  align-self: start;
+}
+
+#bookingsSection .card,
+#slotsSection .card,
+#availabilitySection .card,
+#usersSection .card,
+#settingsSection .card {
+  margin-top: 0;
+}
+    }
+  </style>
+</head>
+<body>
+  <div id="adminApp" class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="logo-psa.png" alt="PSA logo">
+        <div>
+          <h1>Admin Dashboard</h1>
+          <p>National ID Appointment System</p>
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <button class="nav-btn active" data-section="dashboard">
+          <span class="nav-icon">📊</span>
+          <span>Dashboard</span>
+        </button>
+
+        <button class="nav-btn" data-section="bookings">
+          <span class="nav-icon">📋</span>
+          <span>Bookings</span>
+        </button>
+
+        <button class="nav-btn" data-section="slots">
+          <span class="nav-icon">🗓️</span>
+          <span>Slot Management</span>
+        </button>
+
+        <button class="nav-btn" data-section="availability">
+          <span class="nav-icon">📅</span>
+          <span>Availability</span>
+        </button>
+
+        <button class="nav-btn" data-section="users">
+          <span class="nav-icon">👥</span>
+          <span>Users</span>
+        </button>
+
+        <button class="nav-btn" data-section="settings">
+          <span class="nav-icon">⚙️</span>
+          <span>Settings</span>
+        </button>
+      </div>
+    </aside>
+
+    <main class="content">
+      <div class="topbar">
+        <div class="title-wrap">
+          <h2 id="sectionTitle">Dashboard Overview</h2>
+          <p>Review appointments, update records, and manage available slots.</p>
+        </div>
+        <div class="actions">
+          <button class="btn btn-secondary" id="refreshBtn">Refresh Data</button>
+          <button class="btn btn-primary" id="openNewBookingBtn">Add Booking</button>
+        </div>
+      </div>
+
+      <div id="notice" class="notice"></div>
+
+      <section id="dashboardSection" class="dashboard-shell">
+        <div class="dashboard-left">
+          <div class="card dashboard-filter-card">
+            <div class="dashboard-filter-bar">
+              <div>
+                <h3>Dashboard Date Filter</h3>
+                <p>Choose a date to view booking totals and service breakdown.</p>
+              </div>
+
+              <div class="field compact-field">
+                <label for="dashboardDate">Select Date</label>
+                <input type="date" id="dashboardDate" />
+              </div>
+            </div>
+          </div>
+
+          <div class="cards dashboard-metrics">
+            <div class="card metric-card metric-total">
+              <div class="metric-label">Total Bookings</div>
+              <div class="metric-value" id="metricTotal">0</div>
+              <div class="metric-sub">All fetched records</div>
+            </div>
+
+            <div class="card metric-card metric-today">
+              <div class="metric-label">Selected Date</div>
+              <div class="metric-value" id="metricToday">0</div>
+              <div class="metric-sub">Total bookings for chosen date</div>
+            </div>
+
+            <div class="card metric-card metric-pending">
+              <div class="metric-label">Pending</div>
+              <div class="metric-value" id="metricPending">0</div>
+              <div class="metric-sub">Need review or confirmation</div>
+            </div>
+
+            <div class="card metric-card metric-slots">
+              <div class="metric-label">Available Slot Rules</div>
+              <div class="metric-value" id="metricSlots">0</div>
+              <div class="metric-sub">Configured custom slot entries</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="panel-title">
+              <h3>Recent Bookings</h3>
+              <input class="search-input" id="quickSearch" placeholder="Search name, reference, email..." />
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Reference</th>
+                    <th>Name</th>
+                    <th>Service</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="recentBookingsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-right">
+          <div class="card dashboard-right-top">
+            <div class="panel-title">
+              <h3>Bookings by Service</h3>
+            </div>
+            <div id="serviceBreakdown" class="slot-list service-breakdown"></div>
+          </div>
+
+          <div class="card">
+            <div class="panel-title">
+              <h3>Quick Slot Update</h3>
+            </div>
+            <div class="field">
+              <label for="quickService">Service</label>
+              <select id="quickService"></select>
+            </div>
+            <div class="field">
+              <label for="quickDate">Date</label>
+              <input type="date" id="quickDate" />
+            </div>
+            <div class="field">
+              <label for="quickSlots">Available Slots</label>
+              <input type="number" id="quickSlots" min="0" />
+            </div>
+            <button class="btn btn-primary" id="saveQuickSlotBtn">Save Slot Rule</button>
+          </div>
+
+          <div class="card">
+            <div class="panel-title">
+              <h3>Custom Slot Rules</h3>
+            </div>
+            <div class="slot-list" id="dashboardSlotList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="bookingsSection" class="hidden">
+        <div class="card">
+          <div class="panel-title">
+            <h3>Booking Records</h3>
+          </div>
+
+          <div class="filters">
+            <div class="field">
+              <label for="filterService">Service</label>
+              <select id="filterService"></select>
+            </div>
+            <div class="field">
+              <label for="filterStatus">Status</label>
+              <select id="filterStatus">
+                <option value="">All statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="Arrived">Arrived</option>
+                <option value="Assisted">Assisted</option>
+                <option value="Completed">Completed</option>
+                <option value="No Show">No Show</option>
+                <option value="Cancelled">Cancelled</option>
+                <option value="Confirmed">Confirmed</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="filterDate">Date</label>
+              <input type="date" id="filterDate" />
+            </div>
+            <div class="field">
+              <label for="filterSearch">Search</label>
+              <input type="text" id="filterSearch" placeholder="Name, reference, contact" />
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <button class="btn btn-secondary" id="clearFiltersBtn">Clear Filters</button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Reference</th>
+                  <th>Name</th>
+                  <th>Service</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="bookingsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="slotsSection" class="hidden">
+        <div class="panel-grid">
+          <div class="card">
+            <div class="panel-title">
+              <h3>Slot Management</h3>
+              <button class="btn btn-primary" id="openSlotModalBtn">Add Slot Rule</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Service</th>
+                    <th>Available Slots</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="slotsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="panel-title">
+              <h3>Default Slot Limits</h3>
+            </div>
+            <div class="slot-list" id="defaultSlotList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="availabilitySection" class="hidden">
+        <div class="card">
+          <div class="panel-title">
+            <h3>Availability Management</h3>
+            <button class="btn btn-primary" id="openAvailabilityModalBtn">Add Availability Rule</button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Reason</th>
+                  <th>NID Registration</th>
+                  <th>Correction</th>
+                  <th>ePhilID</th>
+                  <th>TRN</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="availabilityTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="settingsSection" class="hidden">
+        <div class="settings-grid">
+          <div class="card settings-card">
+            <div class="panel-title">
+              <h3>System Settings</h3>
+            </div>
+
+            <p class="settings-text">
+              This admin dashboard is connected to the personnel login page and Google Apps Script backend.
+            </p>
+
+            <div class="settings-info-list">
+              <div class="settings-info-item">
+                <strong>Access Control</strong>
+                <span>Authorized personnel only</span>
+              </div>
+
+              <div class="settings-info-item">
+                <strong>Data Source</strong>
+                <span>Google Sheets Appointment Database</span>
+              </div>
+
+              <div class="settings-info-item">
+                <strong>Dashboard Mode</strong>
+                <span>Live Admin View</span>
+              </div>
+
+              <div class="settings-info-item">
+                <strong>Saturday Booking</strong>
+                <span id="saturdayBookingLabel">Loading...</span>
+              </div>
+
+              <div class="settings-info-item">
+                <strong>Sunday Booking</strong>
+                <span id="sundayBookingLabel">Loading...</span>
+              </div>
+
+              <div class="settings-info-item">
+                <strong>Booking Window</strong>
+                <span id="bookingWindowLabel">Loading...</span>
+              </div>
+            </div>
+
+            <div class="field" style="margin-bottom:16px;">
+              <label for="saturdayBookingToggle">Saturday Booking</label>
+              <select id="saturdayBookingToggle">
+                <option value="false">OFF</option>
+                <option value="true">ON</option>
+              </select>
+            </div>
+
+            <div class="field" style="margin-bottom:16px;">
+              <label for="sundayBookingToggle">Sunday Booking</label>
+              <select id="sundayBookingToggle">
+                <option value="false">OFF</option>
+                <option value="true">ON</option>
+              </select>
+            </div>
+
+            <div class="field" style="margin-bottom:16px;">
+              <label for="bookingWindowMonths">Booking Window</label>
+              <select id="bookingWindowMonths">
+                <option value="1">Current month only</option>
+                <option value="2">Current + next month</option>
+                <option value="3">Current + 2 months</option>
+                <option value="4">Current + 3 months</option>
+              </select>
+            </div>
+
+            <div class="row-actions" style="margin-bottom:16px;">
+              <button class="btn btn-primary" id="saveWeekendSettingBtn">Save Weekend Setting</button>
+            </div>
+
+            <div class="settings-actions">
+              <button class="btn btn-secondary" id="logoutBtn">Log Out</button>
+            </div>
+          </div>
+
+          <div class="card settings-card">
+            <div class="panel-title">
+              <h3>Admin Notes</h3>
+            </div>
+            <div class="empty-state">
+              <div class="empty-icon">🛡️</div>
+              <div>
+                <strong>System Ready</strong>
+                <p>Use this dashboard to manage bookings, adjust slot rules, monitor daily service demand, and control weekend booking access.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="usersSection" class="hidden">
+        <div class="card">
+          <div class="panel-title">
+            <h3>User Management</h3>
+            <button class="btn btn-primary" id="openUserModalBtn">New User</button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Full Name</th>
+                  <th>Username</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal" id="userModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="userModalTitle">Create User</h3>
+        <button class="btn btn-secondary" data-close="userModal">Close</button>
+      </div>
+
+      <div class="form-grid">
+        <div class="field full">
+          <label for="userFullName">Full Name</label>
+          <input id="userFullName" type="text" />
+        </div>
+
+        <div class="field">
+          <label for="userUsername">Username</label>
+          <input id="userUsername" type="text" />
+        </div>
+
+        <div class="field">
+          <label for="userPassword">Password</label>
+          <input id="userPassword" type="password" />
+          <div class="hint-text" id="userPasswordHint">Enter a password.</div>
+        </div>
+
+        <div class="field">
+          <label for="userRole">Role</label>
+          <select id="userRole">
+            <option value="personnel">personnel</option>
+            <option value="admin">admin</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="userStatus">Status</label>
+          <select id="userStatus">
+            <option value="active">active</option>
+            <option value="inactive">inactive</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" data-close="userModal">Cancel</button>
+        <button class="btn btn-primary" id="saveUserBtn">Save User</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="bookingModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="bookingModalTitle">Add Booking</h3>
+        <button class="btn btn-secondary" data-close="bookingModal">Close</button>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="bookingRef">Reference</label>
+          <input id="bookingRef" type="text" placeholder="Auto or manual reference" />
+        </div>
+        <div class="field">
+          <label for="bookingStatus">Status</label>
+          <select id="bookingStatus">
+            <option>Confirmed</option>
+            <option>Pending</option>
+            <option>Arrived</option>
+            <option>Assisted</option>
+            <option>Completed</option>
+            <option>No Show</option>
+            <option>Cancelled</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label for="bookingName">Full Name</label>
+          <input id="bookingName" type="text" />
+        </div>
+        <div class="field">
+          <label for="bookingService">Service</label>
+          <select id="bookingService"></select>
+        </div>
+        <div class="field">
+          <label for="bookingDate">Date</label>
+          <input id="bookingDate" type="date" />
+        </div>
+        <div class="field">
+          <label for="bookingTime">Time</label>
+          <select id="bookingTime">
+            <option value="">-- Select Time --</option>
+            <option>8:00 AM</option>
+            <option>9:00 AM</option>
+            <option>10:00 AM</option>
+            <option>11:00 AM</option>
+            <option>1:00 PM</option>
+            <option>2:00 PM</option>
+            <option>3:00 PM</option>
+            <option>4:00 PM</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="bookingEmail">Email</label>
+          <input id="bookingEmail" type="email" />
+        </div>
+        <div class="field">
+          <label for="bookingPhone">Phone</label>
+          <input id="bookingPhone" type="text" />
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" data-close="bookingModal">Cancel</button>
+        <button class="btn btn-primary" id="saveBookingBtn">Save Booking</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="slotModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="slotModalTitle">Add Slot Rule</h3>
+        <button class="btn btn-secondary" data-close="slotModal">Close</button>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="slotDate">Date</label>
+          <input id="slotDate" type="date" />
+        </div>
+        <div class="field">
+          <label for="slotService">Service</label>
+          <select id="slotService"></select>
+        </div>
+        <div class="field full">
+          <label for="slotCount">Available Slots</label>
+          <input id="slotCount" type="number" min="0" />
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" data-close="slotModal">Cancel</button>
+        <button class="btn btn-primary" id="saveSlotBtn">Save Slot Rule</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="availabilityModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="availabilityModalTitle">Add Availability</h3>
+        <button class="btn btn-secondary" data-close="availabilityModal">Close</button>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="availabilityDate">Date</label>
+          <input type="date" id="availabilityDate">
+        </div>
+
+        <div class="field">
+          <label for="availabilityStatus">Status</label>
+          <select id="availabilityStatus">
+            <option value="OPEN">OPEN</option>
+            <option value="CLOSED">CLOSED</option>
+          </select>
+        </div>
+
+        <div class="field full">
+          <label for="availabilityReason">Reason</label>
+          <input type="text" id="availabilityReason" placeholder="Holiday, maintenance, local event, etc.">
+        </div>
+
+        <div class="field">
+          <label for="slotNidReg">NID Registration</label>
+          <input type="number" id="slotNidReg" min="0">
+        </div>
+
+        <div class="field">
+          <label for="slotCorrection">Correction</label>
+          <input type="number" id="slotCorrection" min="0">
+        </div>
+
+        <div class="field">
+          <label for="slotEphilid">ePhilID</label>
+          <input type="number" id="slotEphilid" min="0">
+        </div>
+
+        <div class="field">
+          <label for="slotTrn">TRN</label>
+          <input type="number" id="slotTrn" min="0">
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" data-close="availabilityModal">Cancel</button>
+        <button class="btn btn-primary" id="saveAvailabilityBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+const EXEC_URL = "https://script.google.com/macros/s/AKfycbxX_0IvUJD9bf1W71hPYUOsv59cnVSzlwMOenXnEQIiwlzcL8f8XWtk-l4mE5cMjXlN/exec";
+
+let username = sessionStorage.getItem("nid_username") || "";
+let password = sessionStorage.getItem("nid_password") || "";
+let userRole = sessionStorage.getItem("nid_role") || "";
+let displayName = sessionStorage.getItem("nid_name") || "";
+
+let bookings = [];
+let slotRules = [];
+let availabilityRules = [];
+let users = [];
+let weekendSettings = {
+  saturdayOpen: false,
+  sundayOpen: false,
+  bookingWindowMonths: 1
+};
+
+let editingBookingRef = null;
+let editingSlotKey = null;
+let editingUsername = null;
+
+const services = [
+  "National ID Registration",
+  "Correction/Updating of Demographic Information",
+  "Request National ID in Paper Format (ePhilID)",
+  "Retrieval of TRN / Other Concern"
+];
+
+const defaultSlots = {
+  "National ID Registration": 32,
+  "Correction/Updating of Demographic Information": 16,
+  "Request National ID in Paper Format (ePhilID)": 50,
+  "Retrieval of TRN / Other Concern": 50
+};
+
+const sectionMap = {
+  dashboard: ["dashboardSection", "Dashboard Overview"],
+  bookings: ["bookingsSection", "Booking Management"],
+  slots: ["slotsSection", "Slot Management"],
+  availability: ["availabilitySection", "Availability Management"],
+  users: ["usersSection", "User Management"],
+  settings: ["settingsSection", "System Settings"]
+};
+
+function requireLogin() {
+  if (!username || !password || !userRole) {
+    window.location.href = "login.html";
+    return false;
+  }
+  return true;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function showNotice(message, type = "success", targetId = "notice") {
+  const el = document.getElementById(targetId);
+  if (!el) return;
+
+  el.className = `notice show ${type}`;
+  el.textContent = message;
+
+  setTimeout(() => {
+    el.className = "notice";
+    el.textContent = "";
+  }, 3000);
+}
+
+function openModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) modal.classList.add("open");
+}
+
+function closeModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) modal.classList.remove("open");
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return "—";
+
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const parts = String(dateStr).split("-");
+  if (parts.length !== 3) return dateStr;
+
+  const year = parts[0];
+  const monthIndex = parseInt(parts[1], 10) - 1;
+  const day = parseInt(parts[2], 10);
+
+  if (monthIndex < 0 || monthIndex > 11 || isNaN(day)) return dateStr;
+
+  return `${day} ${months[monthIndex]} ${year}`;
+}
+
+function formatTime(timeValue) {
+  if (!timeValue) return "—";
+
+  const str = String(timeValue).trim();
+
+  if (/^\d{1,2}:\d{2}\s?(AM|PM)$/i.test(str)) {
+    const match = str.match(/^(\d{1,2}):(\d{2})\s?(AM|PM)$/i);
+    const hour = String(parseInt(match[1], 10)).padStart(2, "0");
+    const minute = match[2];
+    const meridian = match[3].toUpperCase();
+    return `${hour}:${minute} ${meridian}`;
+  }
+
+  return str;
+}
+
+function badgeClass(status) {
+  if (status === "Cancelled" || status === "No Show") return "badge badge-cancelled";
+  if (status === "Pending" || status === "Arrived" || status === "Assisted") return "badge badge-pending";
+  if (status === "Completed") return "badge badge-confirmed";
+  return "badge badge-confirmed";
+}
+
+function canEditBookings() {
+  return userRole === "admin";
+}
+
+function isAdmin() {
+  return userRole === "admin";
+}
+
+function fillServiceOptions() {
+  const ids = ["quickService", "filterService", "bookingService", "slotService"];
+
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    const includeAll = id === "filterService";
+    el.innerHTML = includeAll ? `<option value="">All services</option>` : "";
+
+    services.forEach(service => {
+      const option = document.createElement("option");
+      option.value = service;
+      option.textContent = service;
+      el.appendChild(option);
+    });
+  });
+}
+
+function switchSection(section) {
+  if (!sectionMap[section]) return;
+
+  Object.values(sectionMap).forEach(([id]) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add("hidden");
+  });
+
+  document.getElementById(sectionMap[section][0]).classList.remove("hidden");
+  document.getElementById("sectionTitle").textContent = sectionMap[section][1];
+
+  document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.remove("active"));
+  document.querySelector(`.nav-btn[data-section="${section}"]`)?.classList.add("active");
+}
+
+function applyBookingFilters() {
+  const service = document.getElementById("filterService")?.value || "";
+  const status = document.getElementById("filterStatus")?.value || "";
+  const date = document.getElementById("filterDate")?.value || "";
+  const search = (document.getElementById("filterSearch")?.value || "").trim().toLowerCase();
+
+  return bookings.filter(item => {
+    const haystack = [
+      item.refCode,
+      item.fullname,
+      item.email,
+      item.phone,
+      item.time
+    ].join(" ").toLowerCase();
+
+    return (!service || item.service === service) &&
+           (!status || item.status === status) &&
+           (!date || item.date === date) &&
+           (!search || haystack.includes(search));
+  });
+}
+
+function filterQuickSearch() {
+  const q = (document.getElementById("quickSearch")?.value || "").trim().toLowerCase();
+  if (!q) return bookings;
+
+  return bookings.filter(item => {
+    const haystack = [
+      item.refCode,
+      item.fullname,
+      item.email,
+      item.phone,
+      item.time
+    ].join(" ").toLowerCase();
+
+    return haystack.includes(q);
+  });
+}
+
+function renderMetrics() {
+  const selectedDate = document.getElementById("dashboardDate")?.value || new Date().toISOString().slice(0, 10);
+  const bookingsForDate = bookings.filter(b => b.date === selectedDate);
+  const pendingForDate = bookingsForDate.filter(b => b.status === "Pending");
+
+  const metricTotal = document.getElementById("metricTotal");
+  const metricToday = document.getElementById("metricToday");
+  const metricPending = document.getElementById("metricPending");
+  const metricSlots = document.getElementById("metricSlots");
+
+  if (metricTotal) metricTotal.textContent = bookings.length;
+  if (metricToday) metricToday.textContent = bookingsForDate.length;
+  if (metricPending) metricPending.textContent = pendingForDate.length;
+  if (metricSlots) metricSlots.textContent = slotRules.length;
+
+  const breakdownEl = document.getElementById("serviceBreakdown");
+  if (!breakdownEl) return;
+
+  breakdownEl.innerHTML = "";
+
+  const counts = {
+    "National ID Registration": 0,
+    "Correction/Updating of Demographic Information": 0,
+    "Request National ID in Paper Format (ePhilID)": 0,
+    "Retrieval of TRN / Other Concern": 0
+  };
+
+  bookingsForDate.forEach(b => {
+    if (counts.hasOwnProperty(b.service)) {
+      counts[b.service]++;
+    }
+  });
+
+  Object.entries(counts).forEach(([service, count]) => {
+    const div = document.createElement("div");
+    div.className = "slot-item";
+    div.innerHTML = `
+      <div>
+        <strong>${escapeHtml(service)}</strong>
+        <div class="slot-meta">Selected date: ${escapeHtml(formatDate(selectedDate))}</div>
+      </div>
+      <span class="slot-pill">${count} booking${count !== 1 ? "s" : ""}</span>
+    `;
+    breakdownEl.appendChild(div);
+  });
+}
+
+function renderRecentBookings(list = bookings) {
+  const tbody = document.getElementById("recentBookingsBody");
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+
+  list.slice(0, 6).forEach(item => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(item.refCode)}</td>
+      <td>${escapeHtml(item.fullname)}</td>
+      <td>${escapeHtml(item.service)}</td>
+      <td>${escapeHtml(formatDate(item.date))}</td>
+      <td>${escapeHtml(formatTime(item.time))}</td>
+      <td><span class="${badgeClass(item.status)}">${escapeHtml(item.status)}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  if (!tbody.innerHTML) {
+    tbody.innerHTML = `<tr><td colspan="6">No booking records match the selected filters.</td></tr>`;
+  }
+}
+
+function getPersonnelActionButtons(item) {
+  const status = (item.status || "").trim();
+  const safeRef = JSON.stringify(item.refCode);
+
+  if (status === "Completed" || status === "Cancelled" || status === "No Show") {
+    return `<span class="${badgeClass(status)}">${escapeHtml(status)}</span>`;
+  }
+
+  if (status === "Pending" || status === "Confirmed") {
+    return `
+      <div class="row-actions">
+        <button class="mini-btn mini-slot" onclick="updateBookingStatus(${safeRef}, 'Arrived')">Arrived</button>
+        <button class="mini-btn mini-delete" onclick="updateBookingStatus(${safeRef}, 'No Show')">No Show</button>
+      </div>
+    `;
+  }
+
+  if (status === "Arrived") {
+    return `
+      <div class="row-actions">
+        <button class="mini-btn mini-edit" onclick="updateBookingStatus(${safeRef}, 'Assisted')">Assist</button>
+        <button class="mini-btn mini-delete" onclick="updateBookingStatus(${safeRef}, 'No Show')">No Show</button>
+      </div>
+    `;
+  }
+
+  if (status === "Assisted") {
+    return `
+      <div class="row-actions">
+        <button class="mini-btn mini-slot" onclick="updateBookingStatus(${safeRef}, 'Completed')">Complete</button>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="row-actions">
+      <button class="mini-btn mini-slot" onclick="updateBookingStatus(${safeRef}, 'Arrived')">Arrived</button>
+      <button class="mini-btn mini-edit" onclick="updateBookingStatus(${safeRef}, 'Assisted')">Assist</button>
+      <button class="mini-btn mini-slot" onclick="updateBookingStatus(${safeRef}, 'Completed')">Complete</button>
+      <button class="mini-btn mini-delete" onclick="updateBookingStatus(${safeRef}, 'No Show')">No Show</button>
+    </div>
+  `;
+}
+
+function renderBookingsTable() {
+  const tbody = document.getElementById("bookingsTableBody");
+  if (!tbody) return;
+
+  const filtered = applyBookingFilters();
+  tbody.innerHTML = "";
+
+  filtered.forEach(item => {
+    const safeRef = JSON.stringify(item.refCode);
+
+    const actionHtml = canEditBookings()
+      ? `
+        <div class="row-actions">
+          <button class="mini-btn mini-edit" onclick="editBooking(${safeRef})">Edit</button>
+          <button class="mini-btn mini-delete" onclick="deleteBooking(${safeRef})">Delete</button>
+        </div>
+      `
+      : getPersonnelActionButtons(item);
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(item.refCode)}</td>
+      <td>${escapeHtml(item.fullname)}</td>
+      <td>${escapeHtml(item.service)}</td>
+      <td>${escapeHtml(formatDate(item.date))}</td>
+      <td>${escapeHtml(formatTime(item.time))}</td>
+      <td>${escapeHtml(item.email || "—")}</td>
+      <td>${escapeHtml(item.phone || "—")}</td>
+      <td><span class="${badgeClass(item.status)}">${escapeHtml(item.status)}</span></td>
+      <td>${actionHtml}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  if (!tbody.innerHTML) {
+    tbody.innerHTML = `<tr><td colspan="9">No bookings match the current filters.</td></tr>`;
+  }
+}
+
+function renderSlotLists() {
+  const dashboardList = document.getElementById("dashboardSlotList");
+  const slotsTableBody = document.getElementById("slotsTableBody");
+  const defaultList = document.getElementById("defaultSlotList");
+
+  if (dashboardList) dashboardList.innerHTML = "";
+  if (slotsTableBody) slotsTableBody.innerHTML = "";
+  if (defaultList) defaultList.innerHTML = "";
+
+  if (dashboardList) {
+    slotRules.slice(0, 5).forEach(item => {
+      const div = document.createElement("div");
+      div.className = "slot-item";
+      div.innerHTML = `
+        <div>
+          <strong>${escapeHtml(formatDate(item.date))}</strong>
+          <div class="slot-meta">${escapeHtml(item.service)}</div>
+        </div>
+        <span class="slot-pill">${escapeHtml(item.available)} slots</span>
+      `;
+      dashboardList.appendChild(div);
+    });
+
+    if (!dashboardList.innerHTML) {
+      dashboardList.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🗂️</div>
+          <div>
+            <strong>No custom slot rules yet</strong>
+            <p>Add a custom slot rule to override the default service capacity for a specific date.</p>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  if (slotsTableBody) {
+    slotRules.forEach(item => {
+      const key = `${item.date}__${item.service}`;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${escapeHtml(formatDate(item.date))}</td>
+        <td>${escapeHtml(item.service)}</td>
+        <td>${escapeHtml(item.available)}</td>
+        <td>
+          <div class="row-actions">
+            <button class="mini-btn mini-slot" onclick="editSlotRule(${JSON.stringify(key)})">Edit</button>
+            <button class="mini-btn mini-delete" onclick="deleteSlotRule(${JSON.stringify(key)})">Delete</button>
+          </div>
+        </td>
+      `;
+      slotsTableBody.appendChild(tr);
+    });
+
+    if (!slotsTableBody.innerHTML) {
+      slotsTableBody.innerHTML = `<tr><td colspan="4">No custom slot rules have been configured yet.</td></tr>`;
+    }
+  }
+
+  if (defaultList) {
+    Object.entries(defaultSlots).forEach(([service, count]) => {
+      const div = document.createElement("div");
+      div.className = "slot-item";
+      div.innerHTML = `
+        <div>
+          <strong>${escapeHtml(service)}</strong>
+          <div class="slot-meta">Default capacity</div>
+        </div>
+        <span class="slot-pill">${escapeHtml(count)} slots</span>
+      `;
+      defaultList.appendChild(div);
+    });
+  }
+}
+
+function renderAvailabilityTable() {
+  const tbody = document.getElementById("availabilityTableBody");
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+
+  availabilityRules.forEach(rule => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(formatDate(rule.date))}</td>
+      <td>${escapeHtml(rule.status)}</td>
+      <td>${escapeHtml(rule.reason || "—")}</td>
+      <td>${escapeHtml(rule.nidReg ?? "—")}</td>
+      <td>${escapeHtml(rule.updateDemo ?? "—")}</td>
+      <td>${escapeHtml(rule.ephilid ?? "—")}</td>
+      <td>${escapeHtml(rule.trn ?? "—")}</td>
+      <td>
+        <div class="row-actions">
+          <button class="mini-btn mini-delete" onclick="deleteAvailability(${JSON.stringify(rule.date)})">Delete</button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  if (!tbody.innerHTML) {
+    tbody.innerHTML = `<tr><td colspan="8">No availability rules.</td></tr>`;
+  }
+}
+
+function renderUsersTable() {
+  const tbody = document.getElementById("usersTableBody");
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+
+  users.forEach(user => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(user.fullName || "—")}</td>
+      <td>${escapeHtml(user.username || "—")}</td>
+      <td>${escapeHtml(user.role || "—")}</td>
+      <td>${escapeHtml(user.status || "—")}</td>
+      <td>
+        <div class="row-actions">
+          <button class="mini-btn mini-edit" onclick="editUser(${JSON.stringify(user.username)})">Edit</button>
+          <button class="mini-btn mini-delete" onclick="deleteUser(${JSON.stringify(user.username)})">Delete</button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  if (!tbody.innerHTML) {
+    tbody.innerHTML = `<tr><td colspan="5">No users found.</td></tr>`;
+  }
+}
+
+function renderWeekendSettings() {
+  const saturdayToggle = document.getElementById("saturdayBookingToggle");
+  const sundayToggle = document.getElementById("sundayBookingToggle");
+  const bookingWindowSelect = document.getElementById("bookingWindowMonths");
+
+  const saturdayLabel = document.getElementById("saturdayBookingLabel");
+  const sundayLabel = document.getElementById("sundayBookingLabel");
+  const bookingWindowLabel = document.getElementById("bookingWindowLabel");
+
+  if (!saturdayToggle || !sundayToggle || !bookingWindowSelect) return;
+  if (!saturdayLabel || !sundayLabel || !bookingWindowLabel) return;
+
+  saturdayToggle.value = weekendSettings.saturdayOpen ? "true" : "false";
+  sundayToggle.value = weekendSettings.sundayOpen ? "true" : "false";
+  bookingWindowSelect.value = String(weekendSettings.bookingWindowMonths || 1);
+
+  saturdayLabel.textContent = weekendSettings.saturdayOpen ? "Enabled" : "Disabled";
+  sundayLabel.textContent = weekendSettings.sundayOpen ? "Enabled" : "Disabled";
+
+  const months = Number(weekendSettings.bookingWindowMonths || 1);
+  bookingWindowLabel.textContent =
+    months === 1 ? "Current month only" :
+    months === 2 ? "Current + next month" :
+    months === 3 ? "Current + 2 months" :
+    `Current + ${months - 1} months`;
+}
+
+function renderAll() {
+  renderMetrics();
+  renderRecentBookings(filterQuickSearch());
+  renderBookingsTable();
+  renderSlotLists();
+  renderAvailabilityTable();
+  renderUsersTable();
+  renderWeekendSettings();
+}
+
+function resetBookingForm() {
+  editingBookingRef = null;
+  document.getElementById("bookingModalTitle").textContent = "Add Booking";
+  document.getElementById("bookingRef").value = "";
+  document.getElementById("bookingName").value = "";
+  document.getElementById("bookingEmail").value = "";
+  document.getElementById("bookingPhone").value = "";
+  document.getElementById("bookingDate").value = "";
+  document.getElementById("bookingTime").value = "";
+  document.getElementById("bookingStatus").value = "Confirmed";
+  document.getElementById("bookingService").selectedIndex = 0;
+}
+
+function resetSlotForm() {
+  editingSlotKey = null;
+  document.getElementById("slotModalTitle").textContent = "Add Slot Rule";
+  document.getElementById("slotDate").value = "";
+  document.getElementById("slotCount").value = "";
+  document.getElementById("slotService").selectedIndex = 0;
+}
+
+function resetAvailabilityForm() {
+  document.getElementById("availabilityDate").value = "";
+  document.getElementById("availabilityStatus").value = "OPEN";
+  document.getElementById("availabilityReason").value = "";
+  document.getElementById("slotNidReg").value = "";
+  document.getElementById("slotCorrection").value = "";
+  document.getElementById("slotEphilid").value = "";
+  document.getElementById("slotTrn").value = "";
+}
+
+function resetUserForm() {
+  editingUsername = null;
+  document.getElementById("userModalTitle").textContent = "Create User";
+  document.getElementById("userFullName").value = "";
+  document.getElementById("userUsername").value = "";
+  document.getElementById("userPassword").value = "";
+  document.getElementById("userRole").value = "personnel";
+  document.getElementById("userStatus").value = "active";
+  document.getElementById("userPasswordHint").textContent = "Enter a password.";
+}
+
+async function apiRequest(payload) {
+  const finalPayload = {
+    ...payload,
+    authUsername: username,
+    authPassword: password
+  };
+
+  const res = await fetch(EXEC_URL, {
+    method: "POST",
+    body: JSON.stringify(finalPayload)
+  });
+
+  return res.json();
+}
+
+async function loadAdminData() {
+  try {
+    const data = await apiRequest({ action: "adminList" });
+
+    if (data.status === "error") {
+      throw new Error(data.message || "Unable to load admin data.");
+    }
+
+    bookings = Array.isArray(data.bookings) ? data.bookings : [];
+    slotRules = Array.isArray(data.slotRules) ? data.slotRules : [];
+    availabilityRules = Array.isArray(data.availabilityRules) ? data.availabilityRules : [];
+    users = Array.isArray(data.users) ? data.users : [];
+    weekendSettings = data.systemSettings || {
+      saturdayOpen: false,
+      sundayOpen: false,
+      bookingWindowMonths: 1
+    };
+
+    renderAll();
+  } catch (err) {
+    bookings = [];
+    slotRules = [];
+    availabilityRules = [];
+    users = [];
+    weekendSettings = {
+      saturdayOpen: false,
+      sundayOpen: false,
+      bookingWindowMonths: 1
+    };
+
+    renderAll();
+    showNotice(err.message || "Unable to load admin data.", "error");
+  }
+}
+
+async function saveWeekendSetting() {
+  if (!isAdmin()) {
+    showNotice("Only admin can update system settings.", "error");
+    return;
+  }
+
+  const saturdayToggle = document.getElementById("saturdayBookingToggle");
+  const sundayToggle = document.getElementById("sundayBookingToggle");
+  const bookingWindowSelect = document.getElementById("bookingWindowMonths");
+
+  if (!saturdayToggle || !sundayToggle || !bookingWindowSelect) return;
+
+  try {
+    const result = await apiRequest({
+      action: "adminSaveSystemSettings",
+      saturdayOpen: saturdayToggle.value,
+      sundayOpen: sundayToggle.value,
+      bookingWindowMonths: bookingWindowSelect.value
+    });
+
+    if (result.status === "error") {
+      throw new Error(result.message || "Unable to save system settings.");
+    }
+
+    weekendSettings = result.systemSettings || {
+      saturdayOpen: false,
+      sundayOpen: false,
+      bookingWindowMonths: 1
+    };
+
+    renderWeekendSettings();
+    showNotice("System settings updated.");
+  } catch (err) {
+    showNotice(err.message || "Unable to save system settings.", "error");
+  }
+}
+
+async function saveAvailability() {
+  if (!isAdmin()) {
+    showNotice("Only admin can save availability rules.", "error");
+    return;
+  }
+
+  const payload = {
+    action: "adminSaveAvailability",
+    date: document.getElementById("availabilityDate").value,
+    status: document.getElementById("availabilityStatus").value,
+    reason: document.getElementById("availabilityReason").value,
+    nidReg: document.getElementById("slotNidReg").value,
+    updateDemo: document.getElementById("slotCorrection").value,
+    ephilid: document.getElementById("slotEphilid").value,
+    trn: document.getElementById("slotTrn").value
+  };
+
+  if (!payload.date) {
+    showNotice("Please select an availability date.", "error");
+    return;
+  }
+
+  try {
+    const res = await apiRequest(payload);
+
+    if (res.status === "error") {
+      throw new Error(res.message || "Unable to save availability.");
+    }
+
+    showNotice("Availability rule saved.");
+    closeModal("availabilityModal");
+    resetAvailabilityForm();
+    await loadAdminData();
+  } catch (err) {
+    showNotice(err.message || "Unable to save availability.", "error");
+  }
+}
+
+async function saveBooking() {
+  const payload = {
+    action: editingBookingRef ? "adminUpdateBooking" : "adminCreateBooking",
+    originalRefCode: editingBookingRef,
+    refCode: document.getElementById("bookingRef").value.trim(),
+    fullname: document.getElementById("bookingName").value.trim().toUpperCase(),
+    service: document.getElementById("bookingService").value,
+    date: document.getElementById("bookingDate").value,
+    time: document.getElementById("bookingTime").value,
+    email: document.getElementById("bookingEmail").value.trim(),
+    phone: document.getElementById("bookingPhone").value.trim(),
+    status: document.getElementById("bookingStatus").value
+  };
+
+  if (!payload.fullname || !payload.service || !payload.date || !payload.time) {
+    showNotice("Please complete the required booking fields.", "error");
+    return;
+  }
+
+  try {
+    const result = await apiRequest(payload);
+
+    if (result.status === "error") {
+      throw new Error(result.message || "Unable to save booking.");
+    }
+
+    showNotice(editingBookingRef ? "Booking updated." : "Booking added.");
+    closeModal("bookingModal");
+    resetBookingForm();
+    await loadAdminData();
+  } catch (err) {
+    showNotice(err.message || "Unable to save booking.", "error");
+  }
+}
+
+async function saveSlotRule(fromQuickPanel = false) {
+  if (!isAdmin()) {
+    showNotice("Only admin can save slot rules.", "error");
+    return;
+  }
+
+  const date = fromQuickPanel ? document.getElementById("quickDate").value : document.getElementById("slotDate").value;
+  const service = fromQuickPanel ? document.getElementById("quickService").value : document.getElementById("slotService").value;
+  const available = fromQuickPanel ? document.getElementById("quickSlots").value : document.getElementById("slotCount").value;
+
+  if (!date || !service || available === "") {
+    showNotice("Please complete date, service, and available slots.", "error");
+    return;
+  }
+
+  try {
+    const result = await apiRequest({
+      action: "adminSaveSlot",
+      date,
+      service,
+      available: Number(available)
+    });
+
+    if (result.status === "error") {
+      throw new Error(result.message || "Unable to save slot rule.");
+    }
+
+    showNotice("Slot rule saved.");
+    closeModal("slotModal");
+    resetSlotForm();
+
+    const quickDate = document.getElementById("quickDate");
+    const quickSlots = document.getElementById("quickSlots");
+    if (quickDate) quickDate.value = "";
+    if (quickSlots) quickSlots.value = "";
+
+    await loadAdminData();
+  } catch (err) {
+    showNotice(err.message || "Unable to save slot rule.", "error");
+  }
+}
+
+async function saveUser() {
+  if (!isAdmin()) {
+    showNotice("Only admin can manage users.", "error");
+    return;
+  }
+
+  const passwordInput = document.getElementById("userPassword").value.trim();
+
+  const payload = {
+    action: editingUsername ? "adminUpdateUser" : "adminCreateUser",
+    originalUsername: editingUsername,
+    fullName: document.getElementById("userFullName").value.trim(),
+    username: document.getElementById("userUsername").value.trim(),
+    password: passwordInput,
+    role: document.getElementById("userRole").value,
+    status: document.getElementById("userStatus").value
+  };
+
+  if (!payload.fullName || !payload.username || !payload.role) {
+    showNotice("Please complete all required user fields.", "error");
+    return;
+  }
+
+  if (!editingUsername && !payload.password) {
+    showNotice("Password is required for new users.", "error");
+    return;
+  }
+
+  try {
+    const result = await apiRequest(payload);
+
+    if (result.status === "error") {
+      throw new Error(result.message || "Unable to save user.");
+    }
+
+    showNotice(editingUsername ? "User updated." : "User created.");
+    closeModal("userModal");
+    resetUserForm();
+    await loadAdminData();
+  } catch (err) {
+    showNotice(err.message || "Unable to save user.", "error");
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem("nid_username");
+  sessionStorage.removeItem("nid_password");
+  sessionStorage.removeItem("nid_role");
+  sessionStorage.removeItem("nid_name");
+  window.location.href = "login.html";
+}
+
+window.updateBookingStatus = async function(refCode, newStatus) {
+  const item = bookings.find(b => b.refCode === refCode);
+  if (!item) {
+    showNotice("Booking not found.", "error");
+    return;
+  }
+
+  try {
+    const result = await apiRequest({
+      action: "adminUpdateBooking",
+      originalRefCode: item.refCode,
+      refCode: item.refCode,
+      fullname: item.fullname,
+      service: item.service,
+      date: item.date,
+      time: item.time,
+      email: item.email || "",
+      phone: item.phone || "",
+      status: newStatus
+    });
+
+    if (result.status === "error") {
+      throw new Error(result.message || "Unable to update booking status.");
+    }
+
+    showNotice(`Status updated to ${newStatus}.`);
+    await loadAdminData();
+  } catch (err) {
+    showNotice(err.message || "Unable to update booking status.", "error");
+  }
+};
+
+window.editBooking = function(refCode) {
+  const item = bookings.find(b => b.refCode === refCode);
+  if (!item) return;
+
+  editingBookingRef = item.refCode;
+  document.getElementById("bookingModalTitle").textContent = "Edit Booking";
+  document.getElementById("bookingRef").value = item.refCode;
+  document.getElementById("bookingName").value = item.fullname;
+  document.getElementById("bookingEmail").value = item.email || "";
+  document.getElementById("bookingPhone").value = item.phone || "";
+  document.getElementById("bookingDate").value = item.date;
+  document.getElementById("bookingTime").value = item.time || "";
+  document.getElementById("bookingStatus").value = item.status || "Confirmed";
+  document.getElementById("bookingService").value = item.service;
+  openModal("bookingModal");
+};
+
+window.deleteBooking = async function(refCode) {
+  if (!confirm(`Delete booking ${refCode}?`)) return;
+
+  try {
+    const result = await apiRequest({
+      action: "adminDeleteBooking",
+      refCode
+    });
+
+    if (result.status === "error") {
+      throw new Error(result.message || "Unable to delete booking.");
+    }
+
+    showNotice("Booking deleted.");
+    await loadAdminData();
+  } catch (err) {
+    showNotice(err.message || "Unable to delete booking.", "error");
+  }
+};
+
+window.editSlotRule = function(key) {
+  const [date, service] = key.split("__");
+  const item = slotRules.find(s => s.date === date && s.service === service);
+  if (!item) return;
+
+  editingSlotKey = key;
+  document.getElementById("slotModalTitle").textContent = "Edit Slot Rule";
+  document.getElementById("slotDate").value = item.date;
+  document.getElementById("slotService").value = item.service;
+  document.getElementById("slotCount").value = item.available;
+  openModal("slotModal");
+};
+
+window.deleteSlotRule = async function(key) {
+  const [date, service] = key.split("__");
+  if (!confirm(`Delete slot rule for ${service} on ${date}?`)) return;
+
+  try {
+    const result = await apiRequest({
+      action: "adminDeleteSlot",
+      date,
+      service
+    });
+
+    if (result.status === "error") {
+      throw new Error(result.message || "Unable to delete slot rule.");
+    }
+
+    showNotice("Slot rule deleted.");
+    await loadAdminData();
+  } catch (err) {
+    showNotice(err.message || "Unable to delete slot rule.", "error");
+  }
+};
+
+window.deleteAvailability = async function(date) {
+  if (!confirm("Delete availability rule for " + date + "?")) return;
+
+  try {
+    const res = await apiRequest({
+      action: "adminDeleteAvailability",
+      date: date
+    });
+
+    if (res.status === "error") {
+      throw new Error(res.message || "Unable to delete availability.");
+    }
+
+    showNotice("Availability rule deleted.");
+    await loadAdminData();
+  } catch (err) {
+    showNotice(err.message || "Unable to delete availability.", "error");
+  }
+};
+
+window.editUser = function(usernameToEdit) {
+  const user = users.find(u => u.username === usernameToEdit);
+  if (!user) return;
+
+  editingUsername = user.username;
+  document.getElementById("userModalTitle").textContent = "Edit User";
+  document.getElementById("userFullName").value = user.fullName || "";
+  document.getElementById("userUsername").value = user.username || "";
+  document.getElementById("userPassword").value = "";
+  document.getElementById("userRole").value = user.role || "personnel";
+  document.getElementById("userStatus").value = user.status || "active";
+  document.getElementById("userPasswordHint").textContent = "Leave blank to keep the current password.";
+
+  openModal("userModal");
+};
+
+window.deleteUser = async function(usernameToDelete) {
+  if (!confirm(`Delete user ${usernameToDelete}?`)) return;
+
+  try {
+    const result = await apiRequest({
+      action: "adminDeleteUser",
+      username: usernameToDelete
+    });
+
+    if (result.status === "error") {
+      throw new Error(result.message || "Unable to delete user.");
+    }
+
+    showNotice("User deleted.");
+    await loadAdminData();
+  } catch (err) {
+    showNotice(err.message || "Unable to delete user.", "error");
+  }
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  if (!requireLogin()) return;
+
+  if (userRole === "personnel") {
+    document.querySelector('.nav-btn[data-section="slots"]')?.remove();
+    document.querySelector('.nav-btn[data-section="availability"]')?.remove();
+    document.querySelector('.nav-btn[data-section="users"]')?.remove();
+    document.querySelector('.nav-btn[data-section="settings"]')?.remove();
+
+    document.getElementById("openNewBookingBtn")?.remove();
+    document.getElementById("openBookingModalBtn")?.remove();
+    document.getElementById("openSlotModalBtn")?.remove();
+    document.getElementById("openAvailabilityModalBtn")?.remove();
+    document.getElementById("openUserModalBtn")?.remove();
+    document.getElementById("saveQuickSlotBtn")?.remove();
+
+    switchSection("bookings");
+  }
+
+  const dashboardDateInput = document.getElementById("dashboardDate");
+  if (dashboardDateInput) {
+    dashboardDateInput.value = new Date().toISOString().slice(0, 10);
+  }
+
+  fillServiceOptions();
+  renderAll();
+  loadAdminData();
+
+  document.querySelectorAll(".nav-btn").forEach(btn => {
+    btn.addEventListener("click", () => switchSection(btn.dataset.section));
+  });
+
+  document.getElementById("dashboardDate")?.addEventListener("change", renderMetrics);
+  document.getElementById("refreshBtn")?.addEventListener("click", loadAdminData);
+
+  document.getElementById("openNewBookingBtn")?.addEventListener("click", () => {
+    resetBookingForm();
+    openModal("bookingModal");
+  });
+
+  document.getElementById("openBookingModalBtn")?.addEventListener("click", () => {
+    resetBookingForm();
+    openModal("bookingModal");
+  });
+
+  document.getElementById("openSlotModalBtn")?.addEventListener("click", () => {
+    resetSlotForm();
+    openModal("slotModal");
+  });
+
+  document.getElementById("openAvailabilityModalBtn")?.addEventListener("click", () => {
+    resetAvailabilityForm();
+    openModal("availabilityModal");
+  });
+
+  document.getElementById("openUserModalBtn")?.addEventListener("click", () => {
+    resetUserForm();
+    openModal("userModal");
+  });
+
+  document.getElementById("saveBookingBtn")?.addEventListener("click", saveBooking);
+  document.getElementById("saveSlotBtn")?.addEventListener("click", () => saveSlotRule(false));
+  document.getElementById("saveQuickSlotBtn")?.addEventListener("click", () => saveSlotRule(true));
+  document.getElementById("saveAvailabilityBtn")?.addEventListener("click", saveAvailability);
+  document.getElementById("saveUserBtn")?.addEventListener("click", saveUser);
+  document.getElementById("saveWeekendSettingBtn")?.addEventListener("click", saveWeekendSetting);
+  document.getElementById("logoutBtn")?.addEventListener("click", logout);
+
+  document.getElementById("quickSearch")?.addEventListener("input", () => {
+    renderRecentBookings(filterQuickSearch());
+  });
+
+  ["filterService", "filterStatus", "filterDate", "filterSearch"].forEach(id => {
+    document.getElementById(id)?.addEventListener("input", renderBookingsTable);
+  });
+
+  document.getElementById("clearFiltersBtn")?.addEventListener("click", () => {
+    document.getElementById("filterService").value = "";
+    document.getElementById("filterStatus").value = "";
+    document.getElementById("filterDate").value = "";
+    document.getElementById("filterSearch").value = "";
+    renderBookingsTable();
+  });
+
+  document.querySelectorAll("[data-close]").forEach(btn => {
+    btn.addEventListener("click", () => closeModal(btn.dataset.close));
+  });
+
+  document.getElementById("bookingName")?.addEventListener("input", e => {
+    e.target.value = e.target.value.toUpperCase().replace(/\s+/g, " ").replace(/^\s+/, "");
+  });
+
+  document.getElementById("userFullName")?.addEventListener("input", e => {
+    e.target.value = e.target.value.replace(/\s+/g, " ").replace(/^\s+/, "");
+  });
+
+  window.addEventListener("click", e => {
+    document.querySelectorAll(".modal").forEach(modal => {
+      if (e.target === modal) closeModal(modal.id);
+    });
+  });
+});
+  </script>
+</body>
+</html>
