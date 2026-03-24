@@ -1345,7 +1345,7 @@ window.submitForm = async function() {
   loader.style.display = "inline-block";
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
 
   try {
     const res = await postJson({
@@ -1391,6 +1391,9 @@ window.submitForm = async function() {
     if (r.status === "daily_full") {
       return showSystemMessage("Fully Booked", "This service is fully booked on the selected date and time.");
     }
+    if (r.status === "busy") {
+  return showSystemMessage("Please Try Again", r.message || "The system is currently busy. Please try again in a few seconds.");
+}
 
     if (r.status === "success") {
       openSlipWithReference(r.refCode, fullname, service, date, time);
@@ -1447,8 +1450,8 @@ window.submitForm = async function() {
       }
 
       showSystemMessage(
-        "Still Verifying",
-        "The request timed out and we could not yet confirm the booking. Please wait a few seconds before trying again to avoid duplicate appointments."
+        "Not Yet Recorded",
+        "The request timed out and no booking record was found in the system yet. Please tap Confirm Appointment again after a few seconds."
       );
       return;
     }
