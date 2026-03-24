@@ -161,7 +161,6 @@
 <!-- ================= SUPPORTING DOCUMENTS ================= -->
 <div class="modal" id="nidModal" style="display:none;">
   <div class="modal-content docs">
-
     <h3>Supporting Documents – Filipino Citizens</h3>
 
     <h4>PRIMARY SUPPORTING DOCUMENTS</h4>
@@ -230,7 +229,6 @@
 <!-- ================= DEMOGRAPHIC UPDATE MODAL ================= -->
 <div class="modal" id="updateModal" style="display:none;">
   <div class="modal-content docs">
-
     <h3>Updating of Demographic Information</h3>
     <p><strong>Fields to be Changed and List of Identification and/or Supporting Documents</strong></p>
 
@@ -288,14 +286,12 @@
     </p>
 
     <button type="button" onclick="closeUpdateModal()">I Understand</button>
-
   </div>
 </div>
 
 <!-- ================= EPHILID MODAL ================= -->
 <div class="modal" id="ephilidModal" style="display:none;">
   <div class="modal-content docs">
-
     <h3>Important Reminder – ePhilID Printing</h3>
 
     <p>
@@ -329,14 +325,12 @@
     </p>
 
     <button type="button" onclick="closeEphilidModal()">I Understand</button>
-
   </div>
 </div>
 
 <!-- ================= TRN / OTHER CONCERN MODAL ================= -->
 <div class="modal" id="trnModal" style="display:none;">
   <div class="modal-content">
-
     <h3>Important Reminder – TRN Retrieval / Other Concern</h3>
 
     <p>
@@ -365,7 +359,6 @@
     </p>
 
     <button type="button" onclick="closeTrnModal()">I Understand</button>
-
   </div>
 </div>
 
@@ -527,6 +520,7 @@ const DEFAULT_SLOTS = {
 
 let monthlyBooked = {};
 let dailySlotCache = {};
+let monthlySlotCache = {};
 let systemSettings = {
   saturdayOpen: false,
   sundayOpen: false,
@@ -534,7 +528,6 @@ let systemSettings = {
 };
 let bookingWindowEndDate = null;
 let activeCalendarRequestId = 0;
-let monthlySlotCache = {};
 let systemMessageAutoTimer = null;
 
 /* ================= UTILITIES ================= */
@@ -553,12 +546,6 @@ function postJson(payload, options = {}) {
 function setFormDisabled(disabled) {
   const formCard = document.getElementById("mainFormCard");
   const service = document.getElementById("service");
-  const date = document.getElementById("date");
-  const time = document.getElementById("time");
-  const fullname = document.getElementById("fullname");
-  const email = document.getElementById("email");
-  const phone = document.getElementById("phone");
-  const submitBtn = document.getElementById("submitBtn");
 
   if (disabled) {
     formCard.classList.add("form-disabled");
@@ -567,21 +554,6 @@ function setFormDisabled(disabled) {
   }
 
   service.disabled = disabled;
-  date.disabled = disabled;
-  time.disabled = disabled;
-  fullname.disabled = disabled;
-  email.disabled = disabled;
-  phone.disabled = disabled;
-  submitBtn.disabled = disabled;
-
-  if (date._flatpickr) {
-    if (date._flatpickr.altInput) {
-      date._flatpickr.altInput.disabled = disabled;
-    }
-    if (disabled) {
-      date._flatpickr.close();
-    }
-  }
 }
 
 function setDateInputDisabled(disabled) {
@@ -624,22 +596,6 @@ function setAvailabilityInfo(message, color = "#4b5563") {
   info.style.color = color;
 }
 
-function lockBookingInputs(message = "Select a service first to load available dates.") {
-  setApplicantFieldsDisabled(true);
-  setAvailabilityInfo(message, "#4b5563");
-}
-
-function applySlotAvailabilityResult(data) {
-  const remaining = Number(data && data.remaining ? data.remaining : 0);
-  renderSlotInfo(data, document.getElementById("serviceInfoText"));
-
-  if (data && data.open !== false && remaining > 0) {
-    setApplicantFieldsDisabled(false);
-  } else {
-    setApplicantFieldsDisabled(true);
-  }
-}
-
 function openModal(id) {
   const modal = document.getElementById(id);
   if (modal) modal.style.display = "flex";
@@ -680,7 +636,6 @@ function agreePrivacy() {
   setDateInputDisabled(true);
   setTimeInputDisabled(true);
   setApplicantFieldsDisabled(true);
-
   setAvailabilityInfo("Select a service first to load available dates.");
 }
 
@@ -804,10 +759,7 @@ function resetConfirmButtons() {
 }
 
 function resetSlotInfo() {
-  const info = document.getElementById("serviceInfoText");
-  if (!info) return;
-  info.innerHTML = "";
-  info.style.color = "#4b5563";
+  setAvailabilityInfo("", "#4b5563");
 }
 
 function resetForm() {
@@ -824,11 +776,47 @@ function resetForm() {
 
   monthlyBooked = {};
   dailySlotCache = {};
-  resetSlotInfo();
+  monthlySlotCache = {};
   updateWeekendNotice();
   updateSummary();
 
+  setDateInputDisabled(true);
+  setTimeInputDisabled(true);
+  setApplicantFieldsDisabled(true);
+  setAvailabilityInfo("Select a service first to load available dates.");
+
   ["nidModal", "updateModal", "ephilidModal", "trnModal"].forEach(id => closeModal(id));
+}
+
+function renderSlotInfo(data, info) {
+  if (!info) return;
+
+  if (data.status === "error") {
+    info.innerHTML = "⚠ " + (data.message || "Unable to check availability.");
+    info.style.color = "red";
+    return;
+  }
+
+  if (data.open === false) {
+    info.innerHTML = `🔒 Booking closed${data.reason ? " — " + data.reason : ""}`;
+    info.style.color = "red";
+    return;
+  }
+
+  const remaining = Number(data.remaining ?? 0);
+  info.innerHTML = `🟢 Available Slots: <strong>${remaining}</strong>`;
+  info.style.color = remaining <= 0 ? "red" : "green";
+}
+
+function applySlotAvailabilityResult(data) {
+  const remaining = Number(data && data.remaining ? data.remaining : 0);
+  renderSlotInfo(data, document.getElementById("serviceInfoText"));
+
+  if (data && data.open !== false && remaining > 0) {
+    setApplicantFieldsDisabled(false);
+  } else {
+    setApplicantFieldsDisabled(true);
+  }
 }
 
 function sendConfirmationEmailInBackground(payload) {
@@ -1005,31 +993,10 @@ function confirmSubmit() {
 
 /* ================= SLOT CHECK ================= */
 
-function renderSlotInfo(data, info) {
-  if (!info) return;
-
-  if (data.status === "error") {
-    info.innerHTML = "⚠ " + (data.message || "Unable to check availability.");
-    info.style.color = "red";
-    return;
-  }
-
-  if (data.open === false) {
-    info.innerHTML = `🔒 Booking closed${data.reason ? " — " + data.reason : ""}`;
-    info.style.color = "red";
-    return;
-  }
-
-  const remaining = Number(data.remaining ?? 0);
-  info.innerHTML = `🟢 Available Slots: <strong>${remaining}</strong>`;
-  info.style.color = remaining <= 0 ? "red" : "green";
-}
-
 function checkSlots() {
   const service = document.getElementById("service").value;
   const date = document.getElementById("date").value;
   const time = document.getElementById("time").value;
-  const info = document.getElementById("serviceInfoText");
 
   setApplicantFieldsDisabled(true);
 
@@ -1224,9 +1191,7 @@ window.printSlip = function() {
         border-bottom: 1px solid #e5edf6;
         align-items: start;
       }
-      .slip-item:last-child {
-        border-bottom: none;
-      }
+      .slip-item:last-child { border-bottom: none; }
       .slip-label {
         font-size: 11px;
         font-weight: 700;
@@ -1263,32 +1228,8 @@ window.printSlip = function() {
         line-height: 1.4;
         text-align: center;
       }
-      .slip-note {
-        margin: 10px 0 0;
-        padding: 10px 12px;
-        border-radius: 12px;
-        background: #f4f8ff;
-        border: 1px solid #dbe7f5;
-        color: #475467;
-        font-size: 12px;
-        line-height: 1.45;
-        text-align: center;
-      }
-      .slip-actions {
-        display: none !important;
-      }
+      .slip-actions { display: none !important; }
       img { max-width: 100%; }
-      @media print {
-        @page {
-          size: auto;
-          margin: 10mm;
-        }
-        body { padding: 0; }
-        #printArea {
-          max-width: 540px;
-          margin: 0 auto;
-        }
-      }
     </style>
   `;
 
@@ -1458,9 +1399,10 @@ window.submitForm = async function() {
     if (r.status === "daily_full") {
       return showSystemMessage("Fully Booked", "This service is fully booked on the selected date and time.");
     }
+
     if (r.status === "busy") {
-  return showSystemMessage("Please Try Again", r.message || "The system is currently busy. Please try again in a few seconds.");
-}
+      return showSystemMessage("Please Try Again", r.message || "The system is currently busy. Please try again in a few seconds.");
+    }
 
     if (r.status === "success") {
       openSlipWithReference(r.refCode, fullname, service, date, time);
@@ -1634,11 +1576,6 @@ document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("date").addEventListener("change", updateSummary);
   document.getElementById("time").addEventListener("change", updateSummary);
 
-  timeSelect.addEventListener("change", function() {
-  setApplicantFieldsDisabled(true);
-  checkSlots();
-});
-
   updateSummary();
 
   const calendar = flatpickr("#date", {
@@ -1765,66 +1702,72 @@ document.addEventListener("DOMContentLoaded", function() {
       dayElem.setAttribute("data-tooltip", `${remaining} slots left`);
     },
 
-      onChange: function(selectedDates, dateStr, instance) {
-        dailySlotCache = {};
-        document.getElementById("time").value = "";
-        setApplicantFieldsDisabled(true);
-      
-        if (dateStr) {
-          setTimeInputDisabled(false);
-          setAvailabilityInfo("Select a preferred time to check available slot.");
-        } else {
-          setTimeInputDisabled(true);
-          setAvailabilityInfo("Select a preferred date first.");
-        }
-      
-        updateSummary();
+    onChange: function(selectedDates, dateStr, instance) {
+      dailySlotCache = {};
+      document.getElementById("time").value = "";
+      setApplicantFieldsDisabled(true);
+
+      if (dateStr) {
+        setTimeInputDisabled(false);
+        setAvailabilityInfo("Select a preferred time to check available slot.");
+      } else {
+        setTimeInputDisabled(true);
+        setAvailabilityInfo("Select a preferred date first.");
       }
+
+      updateSummary();
+    }
   });
 
-serviceSelect.addEventListener("change", function() {
-  monthlyBooked = {};
-  dailySlotCache = {};
-  resetSlotInfo();
+  serviceSelect.addEventListener("change", function() {
+    monthlyBooked = {};
+    dailySlotCache = {};
+    resetSlotInfo();
 
-  document.getElementById("time").value = "";
-  document.getElementById("fullname").value = "";
-  document.getElementById("email").value = "";
-  document.getElementById("phone").value = "";
+    document.getElementById("time").value = "";
+    document.getElementById("fullname").value = "";
+    document.getElementById("email").value = "";
+    document.getElementById("phone").value = "";
 
-  calendar.clear();
-  calendar.redraw();
-  updateSummary();
+    calendar.clear();
+    calendar.redraw();
+    updateSummary();
 
-  ["nidModal", "updateModal", "ephilidModal", "trnModal"].forEach(id => {
-    closeModal(id);
-  });
+    ["nidModal", "updateModal", "ephilidModal", "trnModal"].forEach(id => {
+      closeModal(id);
+    });
 
-  const modalMap = {
-    "National ID Registration": "nidModal",
-    "Correction/Updating of Demographic Information": "updateModal",
-    "Request National ID in Paper Format (ePhilID)": "ephilidModal",
-    "Retrieval of TRN / Other Concern": "trnModal"
-  };
+    const modalMap = {
+      "National ID Registration": "nidModal",
+      "Correction/Updating of Demographic Information": "updateModal",
+      "Request National ID in Paper Format (ePhilID)": "ephilidModal",
+      "Retrieval of TRN / Other Concern": "trnModal"
+    };
 
-  if (!this.value) {
+    if (!this.value) {
+      setDateInputDisabled(true);
+      setTimeInputDisabled(true);
+      setApplicantFieldsDisabled(true);
+      setAvailabilityInfo("Select a service first to load available dates.");
+      return;
+    }
+
+    if (modalMap[this.value]) {
+      openModal(modalMap[this.value]);
+    }
+
     setDateInputDisabled(true);
     setTimeInputDisabled(true);
     setApplicantFieldsDisabled(true);
-    setAvailabilityInfo("Select a service first to load available dates.");
-    return;
-  }
+    setAvailabilityInfo("⏳ Loading available dates...", "#555");
 
-  if (modalMap[this.value]) {
-    openModal(modalMap[this.value]);
-  }
+    fetchMonthlyData(calendar);
+  });
 
-  setDateInputDisabled(true);
-  setTimeInputDisabled(true);
-  setApplicantFieldsDisabled(true);
-  setAvailabilityInfo("⏳ Loading available dates...", "#555");
-
-  fetchMonthlyData(calendar);
+  timeSelect.addEventListener("change", function() {
+    setApplicantFieldsDisabled(true);
+    checkSlots();
+  });
 });
 
 /* ================= GLOBAL MODAL CLICK ================= */
