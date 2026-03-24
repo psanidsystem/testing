@@ -1368,3 +1368,165 @@ button:disabled {
     background: #f7fbff !important;
   }
 }
+/* ================= FINAL COMPACT PHONE SLIP OVERRIDE ================= */
+
+#slipContent {
+  width: min(100%, 410px) !important;
+  max-width: 410px !important;
+  max-height: 92vh !important;
+  padding: 8px !important;
+  border-radius: 18px !important;
+}
+
+#printableSlip,
+.slip-card {
+  max-width: 372px !important;
+  padding: 12px 10px 10px !important;
+  border-radius: 16px !important;
+}
+
+.slip-header {
+  gap: 8px !important;
+  margin-bottom: 6px !important;
+}
+
+.slip-logo {
+  width: 36px !important;
+  height: 36px !important;
+}
+
+.slip-title {
+  font-size: 14px !important;
+  margin: 0 0 2px !important;
+  line-height: 1.15 !important;
+}
+
+.slip-subtitle {
+  font-size: 9.5px !important;
+  line-height: 1.25 !important;
+}
+
+.slip-divider {
+  margin: 8px 0 10px !important;
+}
+
+.slip-qr-wrap {
+  margin: 0 0 10px !important;
+}
+
+.slip-qr-box {
+  padding: 5px !important;
+  border-radius: 10px !important;
+}
+
+#qrCanvas {
+  width: 88px !important;
+  height: 88px !important;
+}
+
+.slip-qr-note {
+  margin-top: 4px !important;
+  font-size: 9px !important;
+}
+
+.slip-details {
+  border-radius: 12px !important;
+}
+
+.slip-item {
+  grid-template-columns: 98px 1fr !important;
+  gap: 6px !important;
+  padding: 6px 10px !important;
+}
+
+.slip-label {
+  font-size: 8.6px !important;
+  line-height: 1.15 !important;
+  letter-spacing: 0.04em !important;
+}
+
+.slip-value {
+  font-size: 11.5px !important;
+  line-height: 1.3 !important;
+}
+
+.slip-item-address .slip-value {
+  line-height: 1.32 !important;
+}
+
+.slip-reminder.compact {
+  margin-top: 8px !important;
+  padding: 8px 9px !important;
+  border-radius: 11px !important;
+}
+
+.slip-reminder-title {
+  font-size: 10px !important;
+  margin-bottom: 4px !important;
+}
+
+.slip-reminder-text {
+  margin: 0 !important;
+  font-size: 10px !important;
+  line-height: 1.35 !important;
+  text-align: center !important;
+}
+
+.slip-note {
+  margin-top: 7px !important;
+  padding: 7px 8px !important;
+  font-size: 9.8px !important;
+  line-height: 1.3 !important;
+  border-radius: 10px !important;
+}
+
+.slip-actions.compact-actions {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 7px !important;
+  margin-top: 10px !important;
+}
+
+.slip-actions.compact-actions button {
+  min-height: 38px !important;
+  font-size: 13px !important;
+  border-radius: 10px !important;
+  padding: 8px 10px !important;
+}
+
+.slip-actions.compact-actions .close-btn {
+  grid-column: 1 / -1 !important;
+}
+
+@media (max-width: 480px) {
+  #slipContent {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 6px !important;
+  }
+
+  #printableSlip,
+  .slip-card {
+    max-width: 100% !important;
+    padding: 11px 9px 9px !important;
+  }
+
+  .slip-item {
+    grid-template-columns: 1fr !important;
+    gap: 2px !important;
+    padding: 6px 9px !important;
+  }
+
+  .slip-label {
+    font-size: 8.4px !important;
+  }
+
+  .slip-value {
+    text-align: left !important;
+    font-size: 11.3px !important;
+  }
+
+  .slip-actions.compact-actions {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
