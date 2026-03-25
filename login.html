@@ -194,14 +194,28 @@
   </div>
 
   <script>
-    const EXEC_URL = "https://script.google.com/macros/s/AKfycbxX_0IvUJD9bf1W71hPYUOsv59cnVSzlwMOenXnEQIiwlzcL8f8XWtk-l4mE5cMjXlN/exec";
+    const EXEC_URL = "REPLACE_WITH_YOUR_WEB_APP_EXEC_URL";
 
     function alreadyLoggedIn() {
-      return (
-        sessionStorage.getItem("nid_username") &&
-        sessionStorage.getItem("nid_password") &&
-        sessionStorage.getItem("nid_role")
-      );
+      const token = sessionStorage.getItem("nid_session_token");
+      const role = sessionStorage.getItem("nid_role");
+      const expiresAt = Number(sessionStorage.getItem("nid_session_expires") || 0);
+
+      if (!token || !role || !expiresAt) return false;
+      if (Date.now() >= expiresAt) {
+        clearStoredSession();
+        return false;
+      }
+
+      return true;
+    }
+
+    function clearStoredSession() {
+      sessionStorage.removeItem("nid_session_token");
+      sessionStorage.removeItem("nid_session_expires");
+      sessionStorage.removeItem("nid_role");
+      sessionStorage.removeItem("nid_name");
+      sessionStorage.removeItem("nid_username");
     }
 
     function redirectToAdmin() {
@@ -274,10 +288,16 @@
           throw new Error(data.message || "Login failed.");
         }
 
-        sessionStorage.setItem("nid_username", enteredUsername);
-        sessionStorage.setItem("nid_password", enteredPassword);
+        if (!data.sessionToken) {
+          throw new Error("Login succeeded but no session token was returned.");
+        }
+
+        clearStoredSession();
+        sessionStorage.setItem("nid_session_token", data.sessionToken);
+        sessionStorage.setItem("nid_session_expires", String(data.sessionExpiresAt || 0));
         sessionStorage.setItem("nid_role", data.role || "");
         sessionStorage.setItem("nid_name", data.name || "");
+        sessionStorage.setItem("nid_username", data.username || enteredUsername);
 
         showNotice("Login successful. Redirecting...", "success");
 
