@@ -1,2361 +1,3053 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta charset="UTF-8">
-  <title>National ID Appointment System</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
-</head>
-<body>
-
-<!-- ================= FORM ================= -->
-<div id="pageContent">
-  <div class="container" id="formContainer">
-    <div class="card header">
-      <div class="logos">
-        <img class="logo" src="logo-psa.png" alt="PSA Logo">
-        <img class="logo" src="logo-partner.png" alt="National ID Logo">
-      </div>
-      <h2>National ID System</h2>
-      <p>Appointment Request<br>PSA Cebu Fixed Registration Center</p>
-    </div>
-
-    <div class="card" id="mainFormCard">
-      <div class="wizard-steps" id="wizardSteps">
-        <div class="wizard-step active" data-step="1">
-          <div class="step-number">1</div>
-          <div class="wizard-step-label"><strong>Service</strong><small>Choose service</small></div>
-        </div>
-        <div class="wizard-step" data-step="2">
-          <div class="step-number">2</div>
-          <div class="wizard-step-label"><strong>Schedule</strong><small>Date and time</small></div>
-        </div>
-        <div class="wizard-step" data-step="3">
-          <div class="step-number">3</div>
-          <div class="wizard-step-label"><strong>Details</strong><small>Applicant details</small></div>
-        </div>
-        <div class="wizard-step" data-step="4">
-          <div class="step-number">4</div>
-          <div class="wizard-step-label"><strong>Confirm</strong><small>Review</small></div>
-        </div>
-      </div>
-
-      <div class="wizard-note">
-        <div>
-          <strong>Appointment Schedule</strong>
-        </div>
-        <span class="soft-note booking-badge" id="bookingWindowBadge">Loading booking window...</span>
-      </div>
-
-      <div class="form-section step-section" data-step="1" data-step-label="Step 1 · Service">
-        <h3 class="section-title">Select Service</h3>
-
-        <label for="service">Select Service <span class="req">*</span></label>
-        <select id="service" required>
-          <option value="">-- Select Service --</option>
-          <option>National ID Registration</option>
-          <option>Correction/Updating of Demographic Information</option>
-          <option>Request National ID in Paper Format (ePhilID)</option>
-          <option>Retrieval of TRN / Other Concern</option>
-        </select>
-
-        <div class="info-banner" id="weekendNotice"></div>
-
-        <div class="quick-guide" id="serviceGuideBox">
-          <h4 id="serviceGuideTitle">Service reminder</h4>
-          <p id="serviceGuideText">Check the basic requirements for the selected service.</p>
-          <ul class="quick-points" id="serviceGuideList"></ul>
-          <div class="quick-guide-actions">
-            <button type="button" class="outline-btn" id="serviceGuideBtn" onclick="openSelectedServiceGuide()">Requirements</button>
-            <button type="button" class="ghost-btn" onclick="scrollToStep(2)">Next</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="form-section step-section" data-step="2" data-step-label="Step 2 · Schedule">
-        <h3 class="section-title">Schedule</h3>
-
-        <div class="two-col">
-          <div>
-            <label for="date">Preferred Date <span class="req">*</span></label>
-            <input type="text" id="date" placeholder="Choose preferred appointment date" readonly>
-            <div id="selectedDateBadge" class="selected-date-badge" style="display:none;"></div>
-          </div>
-
-          <div>
-            <label for="time">Preferred Time <span class="req">*</span></label>
-            <select id="time" required>
-              <option value="">-- Select Time --</option>
-              <option>8:00 AM</option>
-              <option>9:00 AM</option>
-              <option>10:00 AM</option>
-              <option>11:00 AM</option>
-              <option>1:00 PM</option>
-              <option>2:00 PM</option>
-              <option>3:00 PM</option>
-              <option>4:00 PM</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="calendar-legend">
-          <span><i class="dot dot-available"></i> Available</span>
-          <span><i class="dot dot-full"></i> Full</span>
-          <span><i class="dot dot-closed"></i> Closed</span>
-        </div>
-
-        <div class="service-info">
-          <small id="serviceInfoText"></small>
-        </div>
-
-        <div class="time-grid" id="timeGrid"></div>
-        <p class="soft-note schedule-tip">Tap an available time card to select it.</p>
-      </div>
-
-      <div class="form-section step-section" data-step="3" data-step-label="Step 3 · Applicant Details">
-        <h3 class="section-title">Applicant Details</h3>
-
-        <label for="fullname">Full Name <span class="req">*</span></label>
-        <input id="fullname" type="text" placeholder="Enter full name" required>
-        <div class="inline-error" id="fullnameError"></div>
-
-        <div class="two-col">
-          <div>
-            <label for="email">Email Address</label>
-            <input id="email" type="email" placeholder="example@gmail.com">
-            <div class="inline-error" id="emailError"></div>
-          </div>
-
-          <div>
-            <label for="phone">Mobile Number</label>
-            <input id="phone" type="tel" placeholder="09XXXXXXXXX" maxlength="11">
-            <div class="inline-error" id="phoneError"></div>
-          </div>
-        </div>
-
-        <div class="helper-row compact-helper">
-          <p class="helper-text">Enter at least one contact detail.</p>
-        </div>
-      </div>
-
-      <div class="summary-box enhanced step-section" data-step="4" data-step-label="Step 4 · Review">
-        <h4>Appointment Summary</h4>
-
-        <div class="summary-grid">
-          <div class="summary-item">
-            <span>Service</span>
-            <strong id="summaryService">Not selected</strong>
-          </div>
-          <div class="summary-item">
-            <span>Date</span>
-            <strong id="summaryDate">Not selected</strong>
-          </div>
-          <div class="summary-item">
-            <span>Time</span>
-            <strong id="summaryTime">Not selected</strong>
-          </div>
-        </div>
-
-        <div class="summary-progress">
-          <div class="summary-pill" id="pillStep1">Service Ready</div>
-          <div class="summary-pill" id="pillStep2">Schedule Ready</div>
-          <div class="summary-pill" id="pillStep3">Details Ready</div>
-          <div class="summary-pill" id="pillStep4">Ready to Submit</div>
-        </div>
-
-        <div class="submit-wrap">
-          <button type="button" id="submitBtn" onclick="openConfirmModal()">
-            <span id="btnText">Submit Appointment Request</span>
-            <span id="btnLoader" class="loading" style="display:none;"></span>
-          </button>
-          <div class="submit-subtext">Please review the details before submitting.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ================= PRIVACY NOTICE ================= -->
-
-  <footer class="mini-official-footer">
-    <div class="mini-official-footer-inner">
-      <div>Philippine Statistics Authority</div>
-      <div>National ID System (PhilSys) · Official Appointment Booking Portal</div>
-      <div>© 2026 All Rights Reserved</div>
-    </div>
-  </footer>
-
-<div class="modal" id="privacyModal">
-  <div class="modal-content">
-    <h2>Privacy Notice – National ID Appointment System</h2>
-
-    <p>
-      This system collects and processes limited personal information solely for the purpose of
-      scheduling, managing, and confirming National ID System appointments, in accordance with
-      the <b>Data Privacy Act of 2012 (RA 10173)</b> and applicable
-      <b>Philippine Statistics Authority (PSA) policies</b>.
-    </p>
-
-    <p>
-      The personal data collected include your <b>full name</b>, <b>email address or mobile number</b>,
-      <b>selected service</b>, and <b>preferred appointment schedule</b>.
-    </p>
-
-    <p>
-      Your personal data shall be used exclusively for appointment management and communication
-      purposes. These data are stored securely and protected by appropriate
-      <b>administrative, technical, and physical safeguards</b>.
-    </p>
-
-    <p>
-      Your personal data will not be shared or disclosed to unauthorized parties, except to
-      <b>authorized PSA personnel</b> or when required by law.
-    </p>
-
-    <p>
-      As a data subject, you have the right to <b>access</b>, <b>correct</b>, or <b>request deletion</b>
-      of your personal data, subject to applicable laws and regulations.
-    </p>
-
-    <p>
-      For data privacy concerns, you may contact the <b>PSA Data Protection Officer</b> through
-      the official PSA communication channels.
-    </p>
-
-    <p>
-      By proceeding, you confirm that you have read, understood, and voluntarily consent to the
-      collection and processing of your personal data for the stated purpose.
-    </p>
-
-    <button type="button" onclick="agreePrivacy()">I Agree</button>
-  </div>
-</div>
-
-<!-- ================= SUPPORTING DOCUMENTS ================= -->
-<div class="modal" id="nidModal" style="display:none;">
-  <div class="modal-content docs">
-    <h3>Supporting Documents – Filipino Citizens</h3>
-
-    <h4>PRIMARY SUPPORTING DOCUMENTS</h4>
-    <p>The registrant is encouraged to bring any of the following:</p>
-    <ul>
-      <li>PSA-issued Certificate of Live Birth and one (1) government-issued identification document which bears a full name, front-facing photograph, and signature or thumb mark;</li>
-      <li>Philippine Passport or ePassport issued by the Department of Foreign Affairs (DFA)</li>
-      <li>UMID (GSIS or SSS)</li>
-      <li>Unified Multi-purpose Identification (UMID) Card issued by the Government Service Insurance System (GSIS) or Social Security System (SSS)</li>
-      <li>Student’s License Permit or Non-Professional/Professional Driver’s License issued by the LTO</li>
-    </ul>
-
-    <p class="note">
-      In case there is/are discrepancy/ies in the entry/ies in PSA-issued Certificate of Live Birth and the government-issued ID presented, the entry/ies in the PSA-issued Certificate of Live Birth shall prevail.
-    </p>
-
-    <h4>SECONDARY SUPPORTING DOCUMENTS</h4>
-    <ul>
-      <li>PSA-issued Certificate of Live Birth/National Statistics Office (NSO)-issued Certificate of Live Birth with Birth Reference Number (BreN)</li>
-      <li>Local Civil Registry Office (LCRO)-issued Certificate of Live Birth</li>
-      <li>PSA-issued Report of Birth</li>
-      <li>PSA-issued Certificate of Foundling</li>
-      <li>Integrated Bar of the Philippines (IBP) Identification Card</li>
-      <li>Professional Regulatory Commission (PRC) ID</li>
-      <li>Seaman’s Book (Seafarer’s Record Book)</li>
-      <li>Overseas Workers Welfare Administration (OWWA) ID</li>
-      <li>Senior Citizen’s ID issued by the Office of Senior Citizens Affairs (OSCA) and/or Local Government Units (LGU)</li>
-      <li>Social Security System (SSS) ID</li>
-      <li>Pantawid Pamilyang Pilipino Program (4Ps) ID</li>
-      <li>License to Own or Possess Firearms (LTOPF)</li>
-      <li>National Bureau of Investigation (NBI) Clearance</li>
-      <li>Police Clearance/ID</li>
-      <li>Solo Parent’s ID</li>
-      <li>Person with Disability (PWD) ID issued by the National Council of Disability Affairs (NCDA) or its regional counterpart, Office of the Mayor, Department of Social Welfare and Development (DSWD) Office and other participating organizations with a Memorandum of Agreement with the Department of Health (DOH)</li>
-      <li>Voter’s ID issued by the Commission on Elections (COMELEC)</li>
-      <li>Postal ID issued by the Philippine Postal Corporation (PhilPost)</li>
-      <li>Taxpayer Identification Number (TIN) ID</li>
-      <li>PhilHealth ID</li>
-      <li>Special Resident Retiree’s Visa (SRRV) issued by the Philippine Retirement Authority (PRA)</li>
-      <li>National ID from other countries</li>
-      <li>Residence ID from other countries</li>
-      <li>Professional Identification Card issued by the Maritime Industry Authority (MARINA)</li>
-      <li>Eligibility Card issued by the Civil Service Commission</li>
-      <li>Dependent’s ID issued by the Armed Forces of the Philippines (AFP) and Philippine National Police (PNP)</li>
-    </ul>
-
-    <h4>The following identification documents shall be accepted as secondary supporting documents provided that they have a front-facing photograph, signature/thumbmark, full name, permanent address, and date of birth.</h4>
-    <ul>
-      <li>Employee ID</li>
-      <li>School ID (for pre-school and elementary, signature/thumbmark of the ID owner is not required)</li>
-      <li>City / Municipal ID</li>
-      <li>Barangay Clearance / Certificate / ID</li>
-      <li>Barangay ID</li>
-      <li>Voter’s Certification issued by the COMELEC</li>
-      <li>Prison Record or Certificate of Detention</li>
-    </ul>
-
-    <p class="note">
-      Please ensure you bring the appropriate documents to avoid rescheduling.
-    </p>
-
-    <button type="button" onclick="closeNidModal()">I Understand</button>
-  </div>
-</div>
-
-<!-- ================= DEMOGRAPHIC UPDATE MODAL ================= -->
-<div class="modal" id="updateModal" style="display:none;">
-  <div class="modal-content docs">
-    <h3>Updating of Demographic Information</h3>
-    <p><strong>Fields to be Changed and List of Identification and/or Supporting Documents</strong></p>
-
-    <h4>1. First Name (includes suffix/middle name)</h4>
-    <ul>
-      <li>Certificate of Live Birth issued by PSA, NSO, or LCRO</li>
-      <li>Report of Birth issued by PSA or PFSP</li>
-      <li>Mother’s Certificate of Live Birth or Report of Birth</li>
-      <li>Certificate/Report of Marriage of parents (for middle name correction)</li>
-    </ul>
-
-    <h4>2. Last Name</h4>
-    <ul>
-      <li>Certificate/Report of Birth</li>
-      <li>Certificate/Report of Marriage</li>
-      <li>Certificate of Death (for widowed women)</li>
-      <li>Certificate of Dissolution of Marriage (NCIP)</li>
-    </ul>
-
-    <h4>3. Sex</h4>
-    <ul>
-      <li>Certificate/Report of Birth</li>
-      <li>Annotated Certificate of Live Birth</li>
-    </ul>
-
-    <h4>4. Date of Birth</h4>
-    <ul>
-      <li>Certificate/Report of Birth</li>
-      <li>Annotated Certificate of Live Birth (administrative/judicial correction)</li>
-    </ul>
-
-    <h4>5. Place of Birth</h4>
-    <ul>
-      <li>Certificate/Report of Birth</li>
-      <li>Annotated Certificate of Live Birth</li>
-    </ul>
-
-    <h4>6. Blood Type</h4>
-    <ul>
-      <li>Blood typing result</li>
-    </ul>
-
-    <h4>7. Permanent/Present Address</h4>
-    <ul>
-      <li>Barangay Certificate/ID</li>
-      <li>Proof of billing (at least 3 months)</li>
-      <li>Any supporting document showing updated address</li>
-    </ul>
-
-    <h4>8. Marital Status</h4>
-    <p>Please bring appropriate Marriage, Death, Annulment, Divorce, or CEMAR documents depending on the type of update.</p>
-
-    <p class="note">
-      Please bring the complete ORIGINAL COPY and valid supporting documents to avoid rescheduling.
-    </p>
-
-    <button type="button" onclick="closeUpdateModal()">I Understand</button>
-  </div>
-</div>
-
-<!-- ================= EPHILID MODAL ================= -->
-<div class="modal" id="ephilidModal" style="display:none;">
-  <div class="modal-content docs">
-    <h3>Important Reminder – ePhilID Printing</h3>
-
-    <p>
-      Clients requesting the printing of their <b>ePhilID (National ID in paper format)</b>
-      are required to present their official <b>transaction slip or reference number</b>
-      during their appointment.
-    </p>
-
-    <h4>If claiming through an Authorized Representative:</h4>
-    <ul>
-      <li>Signed Authorization Letter from the registered person</li>
-      <li>Valid government-issued ID of the authorized representative</li>
-      <li>Copy of a valid ID of the registered person</li>
-    </ul>
-
-    <h4>If the registered person is a Minor:</h4>
-    <ul>
-      <li>Birth Certificate of the minor</li>
-      <li>Valid government-issued ID of the parent or legal guardian</li>
-      <li>Supporting document establishing guardianship (if applicable)</li>
-    </ul>
-
-    <p class="note">
-      Appointments may be rescheduled if the required documents are not presented.
-    </p>
-
-    <p>
-      In compliance with the <b>Data Privacy Act of 2012 (RA 10173)</b>,
-      all personal information collected for verification purposes shall remain
-      confidential and used solely for processing the request.
-    </p>
-
-    <button type="button" onclick="closeEphilidModal()">I Understand</button>
-  </div>
-</div>
-
-<!-- ================= TRN / OTHER CONCERN MODAL ================= -->
-<div class="modal" id="trnModal" style="display:none;">
-  <div class="modal-content">
-    <h3>Important Reminder – TRN Retrieval / Other Concern</h3>
-
-    <p>
-      If you have lost your <b>Transaction Reference Number (TRN)</b>,
-      please be prepared to provide the following details during your visit:
-    </p>
-
-    <ul>
-      <li>First Name</li>
-      <li>Middle Name</li>
-      <li>Last Name</li>
-      <li>Suffix (if applicable)</li>
-      <li>Date of Birth (MM/DD/YYYY)</li>
-      <li>Sex (Male/Female)</li>
-    </ul>
-
-    <p>
-      In compliance with the <b>Data Privacy Act of 2012 (RA 10173)</b>,
-      all information provided will remain confidential and shall be used
-      solely for the processing and verification of your request.
-    </p>
-
-    <p class="note">
-      For other concerns not related to TRN retrieval, you may proceed directly
-      to the assigned personnel at the Fixed Registration Center (FRC) for assistance.
-    </p>
-
-    <button type="button" onclick="closeTrnModal()">I Understand</button>
-  </div>
-</div>
-
-<!-- ================= CONFIRM ================= -->
-<div class="modal" id="confirmModal" style="display:none;">
-  <div class="modal-content confirm-modal-card">
-    <div class="confirm-header">
-      <h2>Confirm Appointment</h2>
-      <p class="confirm-subtext">
-        Please review the appointment details before proceeding.
-      </p>
-    </div>
-
-    <div class="confirm-summary-card">
-      <div class="confirm-item">
-        <span class="confirm-label">Full Name</span>
-        <span class="confirm-value" id="cName"></span>
-      </div>
-      <div class="confirm-item">
-        <span class="confirm-label">Service</span>
-        <span class="confirm-value" id="cService"></span>
-      </div>
-      <div class="confirm-item">
-        <span class="confirm-label">Date</span>
-        <span class="confirm-value" id="cDate"></span>
-      </div>
-      <div class="confirm-item">
-        <span class="confirm-label">Time</span>
-        <span class="confirm-value" id="cTime"></span>
-      </div>
-    </div>
-
-    <div id="confirmStatus" class="confirm-status" style="display:none;">
-      <span class="confirm-spinner"></span>
-      <span id="confirmStatusText">Processing appointment...</span>
-    </div>
-
-    <div class="confirm-actions">
-      <button type="button" class="confirm-primary" onclick="confirmSubmit()">
-        Confirm Appointment
-      </button>
-      <button type="button" class="confirm-secondary" onclick="closeModal('confirmModal')">
-        Cancel
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ================= SLIP ================= -->
-<div class="modal" id="slipModal" style="display:none;">
-  <div class="modal-content" id="slipContent">
-    <div class="slip-card" id="printableSlip">
-
-      <div class="slip-header">
-        <img src="logo-psa.png" class="slip-logo" alt="PSA Logo">
-        <img src="logo-partner.png" class="slip-logo" alt="National ID Logo">
-      </div>
-
-      <h2 class="slip-title">National ID Appointment Slip</h2>
-      <p class="slip-subtitle">Philippine Statistics Authority – Cebu</p>
-      <div class="slip-divider"></div>
-
-      <div class="slip-qr-wrap">
-        <div class="slip-qr-box">
-          <canvas id="qrCanvas" width="88" height="88"></canvas>
-        </div>
-        <div class="slip-qr-note">Scan for appointment verification</div>
-      </div>
-
-      <div class="slip-details">
-        <div class="slip-item">
-          <div class="slip-label">Reference Number</div>
-          <div class="slip-value" id="sRef"></div>
-        </div>
-
-        <div class="slip-item">
-          <div class="slip-label">Full Name</div>
-          <div class="slip-value" id="sName"></div>
-        </div>
-
-        <div class="slip-item">
-          <div class="slip-label">Service</div>
-          <div class="slip-value" id="sService"></div>
-        </div>
-
-        <div class="slip-item">
-          <div class="slip-label">Appointment Date</div>
-          <div class="slip-value" id="sDate"></div>
-        </div>
-
-        <div class="slip-item">
-          <div class="slip-label">Appointment Time</div>
-          <div class="slip-value" id="sTime"></div>
-        </div>
-
-        <div class="slip-item">
-          <div class="slip-label">Office Hours</div>
-          <div class="slip-value">8:00 AM to 5:00 PM</div>
-        </div>
-
-        <div class="slip-item slip-item-address">
-          <div class="slip-label">Center</div>
-          <div class="slip-value">
-            National ID Fixed Registration Center<br>
-            3rd Floor, Gaisano Capital South,<br>
-            Cebu City
-          </div>
-        </div>
-      </div>
-
-      <div class="slip-reminder compact">
-        <div class="slip-reminder-title">Important Reminder</div>
-        <p class="slip-reminder-text">
-          Please screenshot, download, or print this slip. If you cannot save it,
-          write down your <strong>Reference Number</strong>. Present this slip or your
-          Reference Number upon arrival, and kindly keep a copy for verification purposes.
-        </p>
-      </div>
-
-      <div class="slip-actions compact-actions" data-no-export="true">
-        <button type="button" onclick="printSlip()">Print</button>
-        <button type="button" onclick="downloadSlip()">Download</button>
-        <button type="button" class="secondary close-btn" onclick="closeSlip()">Close</button>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<!-- ================= CHECKMARK ================= -->
-<div id="checkmarkOverlay" class="checkmark-overlay">
-  <div class="checkmark-circle">
-    <div class="checkmark"></div>
-  </div>
-  <p class="checkmark-text">Booking Completed!</p>
-</div>
-
-<!-- ================= SYSTEM MESSAGE MODAL ================= -->
-<div id="systemModal" class="modal" style="display:none;">
-  <div class="modal-content">
-    <h3 id="systemTitle">Notice</h3>
-    <p id="systemMessage"></p>
-    <div class="actions">
-      <button type="button" onclick="closeSystemModal()">OK</button>
-    </div>
-  </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script>
-const EXEC_URL = "https://script.google.com/macros/s/AKfycbwwcL5QxHi2OXkB9kzr0-gXplEMUaaNDqEd_5wTqzMmYFtTVNYJ9rKpL5Vo8zRT47Zg/exec";
-const TIME_OPTIONS = ["8:00 AM","9:00 AM","10:00 AM","11:00 AM","1:00 PM","2:00 PM","3:00 PM","4:00 PM"];
-
-const DEFAULT_SLOTS = {
-  "National ID Registration": 32,
-  "Correction/Updating of Demographic Information": 16,
-  "Request National ID in Paper Format (ePhilID)": 50,
-  "Retrieval of TRN / Other Concern": 50
-};
-
-let monthlyBooked = {};
-let dailySlotCache = {};
-let monthlySlotCache = {};
-let dateSlotCache = {};
-let systemSettings = {
-  saturdayOpen: false,
-  sundayOpen: false,
-  bookingWindowMonths: 1
-};
-let bookingWindowEndDate = null;
-let activeCalendarRequestId = 0;
-let activeTimeGridRequestId = 0;
-let systemMessageAutoTimer = null;
-
-/* ================= UTILITIES ================= */
-
-function postJson(payload, options = {}) {
-  return fetch(EXEC_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "text/plain;charset=UTF-8"
-    },
-    body: JSON.stringify(payload),
-    ...options
-  });
+:root {
+  --bg: #eef2f7;
+  --card: #ffffff;
+  --primary: #2459a6;
+  --primary-dark: #1b4684;
+  --text: #1f2937;
+  --muted: #667085;
+  --border: #d7e0ea;
+  --border-strong: #c6d3e1;
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --closed: #d1d5db;
+  --danger: #dc2626;
+  --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 20px 50px rgba(15, 23, 42, 0.18);
+  --radius: 18px;
+  --radius-sm: 12px;
 }
 
-function setFormDisabled(disabled) {
-  const formCard = document.getElementById("mainFormCard");
-  const service = document.getElementById("service");
-
-  if (disabled) {
-    formCard.classList.add("form-disabled");
-  } else {
-    formCard.classList.remove("form-disabled");
-  }
-
-  service.disabled = disabled;
+* {
+  box-sizing: border-box;
 }
 
-function setDateInputDisabled(disabled) {
-  const dateInput = document.getElementById("date");
-  if (!dateInput) return;
-
-  dateInput.disabled = disabled;
-
-  if (dateInput._flatpickr) {
-    if (dateInput._flatpickr.altInput) {
-      dateInput._flatpickr.altInput.disabled = disabled;
-    }
-    if (disabled) {
-      dateInput._flatpickr.close();
-    }
-  }
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
-function setTimeInputDisabled(disabled) {
-  const time = document.getElementById("time");
-  if (time) time.disabled = disabled;
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: linear-gradient(180deg, #f7f9fc 0%, var(--bg) 100%);
+  color: var(--text);
+  display: flex;
+  justify-content: center;
+  padding: 28px 16px 40px;
 }
 
-function setApplicantFieldsDisabled(disabled) {
-  const fullname = document.getElementById("fullname");
-  const email = document.getElementById("email");
-  const phone = document.getElementById("phone");
-  const submitBtn = document.getElementById("submitBtn");
-
-  if (fullname) fullname.disabled = disabled;
-  if (email) email.disabled = disabled;
-  if (phone) phone.disabled = disabled;
-  if (submitBtn) submitBtn.disabled = disabled;
+.container {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
 }
 
-function setAvailabilityInfo(message, color = "#4b5563") {
-  const info = document.getElementById("serviceInfoText");
-  if (!info) return;
-  info.innerHTML = message || "";
-  info.style.color = color;
+.card {
+  background: var(--card);
+  padding: 24px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(215, 224, 234, 0.8);
 }
 
-function openModal(id) {
-  const modal = document.getElementById(id);
-  if (modal) modal.style.display = "flex";
+/* ================= HEADER ================= */
+
+.header {
+  background: linear-gradient(135deg, #2a63b0 0%, #285ca2 100%);
+  color: #ffffff;
+  text-align: center;
+  margin-bottom: 18px;
+  padding: 24px 22px 22px;
+  border-radius: 22px;
+  box-shadow: 0 14px 34px rgba(36, 89, 166, 0.2);
 }
 
-function closeModal(id) {
-  const modal = document.getElementById(id);
-  if (modal) modal.style.display = "none";
+.logos {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
-function showSystemMessage(title, message) {
-  document.getElementById("systemTitle").textContent = title;
-  document.getElementById("systemMessage").textContent = message;
-  openModal("systemModal");
+.logo {
+  width: 86px;
+  height: 86px;
+  object-fit: contain;
 }
 
-function showSystemMessageAuto(title, message, callback, delay = 1400) {
-  if (systemMessageAutoTimer) {
-    clearTimeout(systemMessageAutoTimer);
-    systemMessageAutoTimer = null;
-  }
-
-  document.getElementById("systemTitle").textContent = title;
-  document.getElementById("systemMessage").textContent = message;
-  openModal("systemModal");
-
-  systemMessageAutoTimer = setTimeout(() => {
-    closeModal("systemModal");
-    systemMessageAutoTimer = null;
-    if (typeof callback === "function") callback();
-  }, delay);
+.header h2 {
+  margin: 0 0 6px;
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.02em;
 }
 
-function agreePrivacy() {
-  closeModal("privacyModal");
-  setFormDisabled(false);
-
-  setDateInputDisabled(true);
-  setTimeInputDisabled(true);
-  setApplicantFieldsDisabled(true);
-  setAvailabilityInfo("Select a service to continue.");
-  updateSummary();
+.header p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.94);
 }
 
-function normalizeMonthString(year, monthIndexZeroBased) {
-  return year + "-" + String(monthIndexZeroBased + 1).padStart(2, "0");
+/* ================= TYPOGRAPHY ================= */
+
+h2 {
+  margin-top: 0;
+  color: var(--primary);
 }
 
-function updateWeekendNotice() {
-  const el = document.getElementById("weekendNotice");
-  if (!el) return;
-
-  const parts = [];
-  parts.push(systemSettings.saturdayOpen ? "Saturday: OPEN" : "Saturday: CLOSED");
-  parts.push(systemSettings.sundayOpen ? "Sunday: OPEN" : "Sunday: CLOSED");
-
-  const months = Number(systemSettings.bookingWindowMonths || 1);
-  const bookingWindowText =
-    months === 1 ? "Booking window: current month only" :
-    months === 2 ? "Booking window: current + next month" :
-    `Booking window: current + ${months - 1} months`;
-
-  el.textContent = `${parts.join(" • ")} • ${bookingWindowText}`;
-  el.style.color = "#475467";
+label {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
 }
 
-function updateBookingWindowBadge() {
-  const badge = document.getElementById("bookingWindowBadge");
-  if (!badge) return;
-  badge.textContent = bookingWindowEndDate
-    ? `Booking until ${formatPrettyDate(bookingWindowEndDate)}`
-    : "Loading booking window...";
+.req {
+  color: #c62828;
 }
 
-function updateSelectedDateBadge() {
-  const badge = document.getElementById("selectedDateBadge");
-  const rawDate = document.getElementById("date")?.value || "";
-
-  if (!badge) return;
-
-  if (!rawDate) {
-    badge.style.display = "none";
-    badge.innerHTML = "";
-    return;
-  }
-
-  badge.style.display = "inline-flex";
-  badge.innerHTML = `<span class="badge-dot"></span><span>Selected: ${formatPrettyDate(rawDate)}</span>`;
+.section-title {
+  margin: 0 0 14px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #18212f;
+  letter-spacing: -0.01em;
 }
 
-function getServiceGuide(service) {
-  const guides = {
-    "National ID Registration": {
-      title: "National ID Registration",
-      text: "Bring original supporting documents for first-time registration.",
-      list: [
-        "Prepare one primary or acceptable secondary supporting document.",
-        "Ensure your full name and date of birth are readable.",
-        "Arrive before your selected appointment time."
-      ],
-      modalId: "nidModal"
-    },
-    "Correction/Updating of Demographic Information": {
-      title: "Correction/Updating of Demographic Information",
-      text: "Prepare documents that support the exact field to be corrected.",
-      list: [
-        "Bring original PSA/LCRO or other required supporting documents.",
-        "Review the field to be changed before visiting the center.",
-        "Additional evaluation may be required depending on the correction."
-      ],
-      modalId: "updateModal"
-    },
-    "Request National ID in Paper Format (ePhilID)": {
-      title: "Request National ID in Paper Format (ePhilID)",
-      text: "This service is for clients requesting their National ID in paper format.",
-      list: [
-        "Bring your transaction details if available.",
-        "Prepare a contact detail for follow-up if needed.",
-        "Please verify that your demographic information is correct."
-      ],
-      modalId: "ephilidModal"
-    },
-    "Retrieval of TRN / Other Concern": {
-      title: "Retrieval of TRN / Other Concern",
-      text: "Prepare details that can help personnel verify your concern quickly.",
-      list: [
-        "Bring any available reference, old slip, or transaction details.",
-        "Describe the concern clearly during your appointment.",
-        "Additional review may be required depending on the concern type."
-      ],
-      modalId: "trnModal"
-    }
-  };
-  return guides[service] || null;
+.helper-text {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.45;
 }
 
-function updateServiceGuide() {
-  const service = document.getElementById("service").value;
-  const box = document.getElementById("serviceGuideBox");
-  const title = document.getElementById("serviceGuideTitle");
-  const text = document.getElementById("serviceGuideText");
-  const list = document.getElementById("serviceGuideList");
-  const btn = document.getElementById("serviceGuideBtn");
+/* ================= FORM LAYOUT ================= */
 
-  if (!box || !title || !text || !list || !btn) return;
-
-  const guide = getServiceGuide(service);
-
-  if (!guide) {
-    box.classList.remove("show");
-    list.innerHTML = "";
-    return;
-  }
-
-  title.textContent = guide.title;
-  text.textContent = guide.text;
-  list.innerHTML = guide.list.map(item => `<li>${item}</li>`).join("");
-  btn.dataset.modalId = guide.modalId;
-  box.classList.add("show");
+#mainFormCard {
+  padding: 26px 24px 24px;
+  border-radius: 22px;
 }
 
-function openSelectedServiceGuide() {
-  const btn = document.getElementById("serviceGuideBtn");
-  const modalId = btn && btn.dataset.modalId;
-  if (modalId) openModal(modalId);
+.form-section {
+  margin-bottom: 26px;
 }
 
-function scrollToStep(stepNumber) {
-  const section = document.querySelector(`.step-section[data-step="${stepNumber}"]`);
-  if (section) {
-    section.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
 }
 
-function setInlineError(fieldId, message) {
-  const field = document.getElementById(fieldId);
-  const error = document.getElementById(fieldId + "Error");
-  if (field) field.classList.toggle("field-error", !!message);
-  if (error) {
-    error.textContent = message || "";
-    error.style.display = message ? "block" : "none";
-  }
+/* ================= INPUTS ================= */
+
+input,
+select,
+button,
+textarea {
+  font: inherit;
 }
 
-function validateApplicantFields(showErrors = false) {
-  const fullname = document.getElementById("fullname").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-
-  let valid = true;
-
-  const nameError = !fullname
-    ? "Full name is required."
-    : fullname.replace(/[^A-Z .'-]/gi, "").trim().length < 4
-      ? "Please enter a valid full name."
-      : "";
-  if (nameError) valid = false;
-
-  const emailError = email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-    ? "Please enter a valid email address."
-    : "";
-  if (emailError) valid = false;
-
-  const phoneError = phone && !/^09\d{9}$/.test(phone)
-    ? "Use 11 digits starting with 09."
-    : "";
-  if (phoneError) valid = false;
-
-  const contactError = !email && !phone
-    ? "Provide at least one contact detail."
-    : "";
-  if (contactError) valid = false;
-
-  if (showErrors) {
-    setInlineError("fullname", nameError);
-    setInlineError("email", emailError || (contactError && !email ? contactError : ""));
-    setInlineError("phone", phoneError || (contactError && !phone ? contactError : ""));
-  }
-
-  return { valid, fullname, email, phone };
+input,
+select,
+.card input,
+.card select {
+  width: 100%;
+  height: 50px;
+  padding: 0 15px;
+  border-radius: 12px;
+  border: 1px solid var(--border-strong);
+  background: #ffffff;
+  color: var(--text);
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
-function updateStepState() {
-  const service = document.getElementById("service").value;
-  const date = document.getElementById("date").value;
-  const time = document.getElementById("time").value;
-  const applicant = validateApplicantFields(false);
-  const readyToSubmit = !!(service && date && time && applicant.valid && !document.getElementById("submitBtn").disabled);
-
-  document.querySelectorAll(".wizard-step").forEach(stepEl => {
-    const step = Number(stepEl.dataset.step || 0);
-    stepEl.classList.remove("active", "done");
-
-    if (step === 1 && service) stepEl.classList.add("done");
-    if (step === 2 && service && date && time) stepEl.classList.add("done");
-    if (step === 3 && service && date && time && applicant.valid) stepEl.classList.add("done");
-    if (step === 4 && readyToSubmit) stepEl.classList.add("done");
-
-    if ((step === 1 && !service) ||
-        (step === 2 && service && (!date || !time)) ||
-        (step === 3 && service && date && time && !applicant.valid) ||
-        (step === 4 && service && date && time && applicant.valid && !readyToSubmit)) {
-      stepEl.classList.add("active");
-    }
-  });
-
-  document.getElementById("pillStep1")?.classList.toggle("done", !!service);
-  document.getElementById("pillStep2")?.classList.toggle("done", !!(service && date && time));
-  document.getElementById("pillStep3")?.classList.toggle("done", !!(service && date && time && applicant.valid));
-  document.getElementById("pillStep4")?.classList.toggle("done", readyToSubmit);
-
-  document.getElementById("pillStep1")?.classList.toggle("active", !service);
-  document.getElementById("pillStep2")?.classList.toggle("active", !!service && (!date || !time));
-  document.getElementById("pillStep3")?.classList.toggle("active", !!(service && date && time && !applicant.valid));
-  document.getElementById("pillStep4")?.classList.toggle("active", !!(service && date && time && applicant.valid && !readyToSubmit));
+input::placeholder,
+.card input::placeholder {
+  color: #98a2b3;
 }
 
-function renderTimeGrid(items = [], loading = false) {
-  const grid = document.getElementById("timeGrid");
-  if (!grid) return;
-
-  if (loading) {
-    grid.innerHTML = `
-      <div class="loading-panel" aria-live="polite">
-        <span class="formal-spinner dark"></span>
-        <div>
-          <strong>Loading available time slots</strong>
-          <small>Please wait while the schedule is being prepared.</small>
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  if (!items.length) {
-    grid.innerHTML = "";
-    return;
-  }
-
-  const selected = document.getElementById("time").value;
-
-  grid.innerHTML = items.map(item => {
-    const normalizedTime = item.time;
-    const rawRemaining = Number(item.remaining ?? 0);
-    const remaining = Number.isFinite(rawRemaining) ? rawRemaining : 0;
-    const open = item.open !== false;
-    const disabled = !open || remaining <= 0;
-    const statusClass = !open ? "closed" : remaining <= 0 ? "full" : "available";
-    const statusText = !open
-      ? (item.reason || "Closed")
-      : remaining <= 0
-        ? "Fully booked"
-        : `${remaining} slot${remaining > 1 ? "s" : ""} left`;
-
-    return `
-      <button type="button"
-        class="time-chip ${statusClass} ${selected === normalizedTime ? "selected" : ""}"
-        ${disabled ? "disabled" : ""}
-        data-time="${normalizedTime}"
-        onclick="selectTimeSlot('${normalizedTime.replace(/'/g, "\\'")}')">
-        <strong>${normalizedTime}</strong>
-        <small>${statusText}</small>
-      </button>
-    `;
-  }).join("");
+input:focus,
+select:focus,
+.card input:focus,
+.card select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(36, 89, 166, 0.1);
+  background: #ffffff;
 }
 
-function populateTimeSelect(items = []) {
-  const timeSelect = document.getElementById("time");
-  const current = timeSelect.value;
-  timeSelect.innerHTML = '<option value="">-- Select Time --</option>';
-
-  items.forEach(item => {
-    const option = document.createElement("option");
-    option.value = item.time;
-    const remaining = Number(item.remaining ?? 0);
-    if (item.open === false) {
-      option.textContent = `${item.time} — Closed`;
-      option.disabled = true;
-    } else if (remaining <= 0) {
-      option.textContent = `${item.time} — Full`;
-      option.disabled = true;
-    } else {
-      option.textContent = `${item.time} — ${remaining} slot${remaining > 1 ? "s" : ""} left`;
-    }
-    timeSelect.appendChild(option);
-  });
-
-  const stillExists = [...timeSelect.options].some(opt => opt.value === current && !opt.disabled);
-  timeSelect.value = stillExists ? current : "";
+input:disabled,
+select:disabled,
+.card input:disabled,
+.card select:disabled {
+  background: #f5f7fb;
+  color: #98a2b3;
+  cursor: not-allowed;
 }
 
-async function prefetchTimeSlotsForDate() {
-  const service = document.getElementById("service").value;
-  const date = document.getElementById("date").value;
+/* ================= BUTTONS ================= */
 
-  setApplicantFieldsDisabled(true);
-
-  if (!service || !date) {
-    renderTimeGrid([]);
-    populateTimeSelect([]);
-    updateStepState();
-    return;
-  }
-
-  const requestId = ++activeTimeGridRequestId;
-  const dateCacheKey = `${service}_${date}`;
-
-  setTimeInputDisabled(true);
-  renderTimeGrid([], true);
-  setAvailabilityInfo("Loading available time slots...", "#475467");
-
-  try {
-    let results = dateSlotCache[dateCacheKey];
-
-    if (!results) {
-      const res = await postJson({
-        action: "slotsForDate",
-        date,
-        service
-      });
-      const data = await res.json();
-
-      if (data.status !== "success" || !Array.isArray(data.items)) {
-        throw new Error(data.message || "Unable to load slot availability.");
-      }
-
-      results = data.items.map(item => ({
-        time: item.time,
-        open: item.open,
-        reason: item.reason || "",
-        remaining: Number(item.remaining ?? 0),
-        max: Number(item.max ?? 0)
-      }));
-
-      dateSlotCache[dateCacheKey] = results;
-
-      results.forEach(item => {
-        const timeCacheKey = `${service}_${date}_${item.time}`;
-        dailySlotCache[timeCacheKey] = {
-          open: item.open,
-          reason: item.reason || "",
-          remaining: Number(item.remaining ?? 0),
-          max: Number(item.max ?? 0)
-        };
-      });
-    }
-
-    if (requestId !== activeTimeGridRequestId) return;
-
-    populateTimeSelect(results);
-    renderTimeGrid(results);
-    setTimeInputDisabled(false);
-
-    if (document.getElementById("time").value) {
-      checkSlots();
-    } else {
-      setAvailabilityInfo("Select a time to continue.", "#475467");
-    }
-
-    updateStepState();
-  } catch (err) {
-    if (requestId !== activeTimeGridRequestId) return;
-    console.error("prefetchTimeSlotsForDate error:", err);
-    renderTimeGrid([]);
-    populateTimeSelect([]);
-    setTimeInputDisabled(true);
-    setAvailabilityInfo("Unable to load available time slots. Please try again.", "#b42318");
-    updateStepState();
-  }
+button {
+  margin-top: 20px;
+  width: 100%;
+  min-height: 50px;
+  padding: 12px 16px;
+  background: linear-gradient(180deg, #2b63b1 0%, #2459a6 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  box-shadow: 0 10px 22px rgba(36, 89, 166, 0.2);
+  transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
-function selectTimeSlot(timeValue) {
-  const timeSelect = document.getElementById("time");
-  if (!timeSelect || !timeValue) return;
-
-  const targetOption = [...timeSelect.options].find(opt => opt.value === timeValue && !opt.disabled);
-  if (!targetOption) return;
-
-  timeSelect.value = timeValue;
-  updateSummary();
-  checkSlots();
+button:hover {
+  background: linear-gradient(180deg, #23569b 0%, #1b4684 100%);
+  box-shadow: 0 14px 26px rgba(27, 70, 132, 0.22);
+  transform: translateY(-1px);
 }
 
-
-function formatAppointmentDate(dateStr) {
-  if (!dateStr) return "";
-
-  const months = [
-    "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
-    "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
-  ];
-
-  const parts = String(dateStr).split("-");
-  if (parts.length !== 3) return dateStr;
-
-  const year = parts[0];
-  const month = months[parseInt(parts[1], 10) - 1];
-  const day = parts[2];
-
-  return `${day} ${month} ${year}`;
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
 }
 
-function formatPrettyDate(dateStr) {
-  if (!dateStr) return "Not selected";
+/* ================= INFO / SUMMARY ================= */
 
-  const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
-
-  const parts = String(dateStr).split("-");
-  if (parts.length !== 3) return dateStr;
-
-  const year = parts[0];
-  const month = months[parseInt(parts[1], 10) - 1];
-  const day = parseInt(parts[2], 10);
-
-  return `${day} ${month} ${year}`;
+.info-banner {
+  margin-top: 14px;
+  padding: 14px 15px;
+  background: linear-gradient(180deg, #f5f9ff 0%, #eef5ff 100%);
+  border: 1px solid #d4e2f3;
+  border-radius: 16px;
+  color: #4b5565;
+  font-size: 14px;
+  line-height: 1.55;
 }
 
-function updateSummary() {
-  const service = document.getElementById("service").value || "Not selected";
-  const rawDate = document.getElementById("date").value;
-  const time = document.getElementById("time").value || "Not selected";
-
-  document.getElementById("summaryService").textContent = service;
-  document.getElementById("summaryDate").textContent = rawDate ? formatPrettyDate(rawDate) : "Not selected";
-  document.getElementById("summaryTime").textContent = time;
-
-  updateServiceGuide();
-  updateBookingWindowBadge();
-  updateSelectedDateBadge();
-  updateStepState();
+.summary-box {
+  margin: 20px 0;
+  padding: 18px 18px 16px;
+  border: 1px solid #d6e1ef;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fbfdff 0%, #f3f8ff 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
-function showCheckmark() {
-  const overlay = document.getElementById("checkmarkOverlay");
-  overlay.style.display = "flex";
-
-  setTimeout(() => {
-    overlay.style.display = "none";
-  }, 2000);
+.summary-box h4 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  color: var(--primary);
+  font-weight: 800;
 }
 
-function drawSlipQR(text) {
-  const qrCanvas = document.getElementById("qrCanvas");
-  if (!qrCanvas || typeof QRious === "undefined") return;
-
-  new QRious({
-    element: qrCanvas,
-    value: text,
-    size: 88,
-    level: "H",
-    background: "white",
-    foreground: "black"
-  });
+.summary-box p {
+  margin: 7px 0;
+  font-size: 14px;
+  color: #344054;
+  line-height: 1.45;
 }
 
-function setConfirmLoading(isLoading, message = "Processing appointment request...") {
-  const primaryBtn = document.querySelector(".confirm-primary");
-  const secondaryBtn = document.querySelector(".confirm-secondary");
-  const statusBox = document.getElementById("confirmStatus");
-  const statusText = document.getElementById("confirmStatusText");
-
-  if (statusText) {
-    statusText.textContent = message;
-  }
-
-  if (statusBox) {
-    statusBox.style.display = isLoading ? "flex" : "none";
-    statusBox.classList.toggle("formal-loading-row", !!isLoading);
-  }
-
-  if (primaryBtn) {
-    primaryBtn.disabled = isLoading;
-    primaryBtn.textContent = isLoading ? "Processing..." : "Confirm Appointment";
-  }
-
-  if (secondaryBtn) {
-    secondaryBtn.disabled = isLoading;
-  }
+.summary-box strong {
+  color: #1f2937;
 }
 
-function resetConfirmButtons() {
-  setConfirmLoading(false, "Processing appointment request...");
+/* ================= CALENDAR LEGEND ================= */
+
+.calendar-note {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--muted);
 }
 
-function resetSlotInfo() {
-  setAvailabilityInfo("", "#4b5563");
+.calendar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--muted);
 }
 
-function resetForm() {
-  document.getElementById("service").value = "";
-  document.getElementById("time").value = "";
-  document.getElementById("fullname").value = "";
-  document.getElementById("email").value = "";
-  document.getElementById("phone").value = "";
-
-  const dateInput = document.getElementById("date");
-  if (dateInput._flatpickr) {
-    dateInput._flatpickr.clear();
-  }
-
-  monthlyBooked = {};
-  dailySlotCache = {};
-  monthlySlotCache = {};
-  dateSlotCache = {};
-  renderTimeGrid([]);
-  ["fullname","email","phone"].forEach(id => setInlineError(id, ""));
-  updateWeekendNotice();
-  updateBookingWindowBadge();
-  updateSummary();
-
-  setDateInputDisabled(true);
-  setTimeInputDisabled(true);
-  setApplicantFieldsDisabled(true);
-  setAvailabilityInfo("Select a service first to load available dates.");
-
-  ["nidModal", "updateModal", "ephilidModal", "trnModal"].forEach(id => closeModal(id));
+.calendar-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-function renderSlotInfo(data, info) {
-  if (!info) return;
-
-  if (data.status === "error") {
-    info.innerHTML = (data.message || "Unable to check availability.");
-    info.style.color = "#b42318";
-    return;
-  }
-
-  if (data.open === false) {
-    info.innerHTML = `Schedule closed${data.reason ? " — " + data.reason : ""}`;
-    info.style.color = "#b42318";
-    return;
-  }
-
-  const remaining = Number(data.remaining ?? 0);
-  info.innerHTML = `Available slots: <strong>${remaining}</strong>`;
-  info.style.color = remaining <= 0 ? "#b42318" : "#137333";
+.dot {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  margin: 0;
 }
 
-function applySlotAvailabilityResult(data) {
-  const remaining = Number(data && data.remaining ? data.remaining : 0);
-  renderSlotInfo(data, document.getElementById("serviceInfoText"));
-
-  if (data && data.open !== false && remaining > 0) {
-    setApplicantFieldsDisabled(false);
-  } else {
-    setApplicantFieldsDisabled(true);
-  }
-
-  renderTimeGrid(TIME_OPTIONS.map(time => {
-    const key = `${document.getElementById("service").value}_${document.getElementById("date").value}_${time}`;
-    return { time, ...(dailySlotCache[key] || {}) };
-  }).filter(item => item.open !== undefined || item.status === "error"));
-
-  updateStepState();
+.dot-available {
+  background: var(--success);
 }
 
-function sendConfirmationEmailInBackground(payload) {
-  const email = String(payload.email || "").trim();
-  if (!email) return;
-
-  fetch(EXEC_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "text/plain;charset=UTF-8"
-    },
-    body: JSON.stringify({
-      action: "sendConfirmationEmail",
-      refCode: payload.refCode || "",
-      fullname: payload.fullname || "",
-      service: payload.service || "",
-      date: payload.date || "",
-      time: payload.time || "",
-      email: email
-    })
-  })
-    .then(res => res.json())
-    .then(data => {
-      console.log("Email background response:", data);
-
-      if (data.status === "quota_exceeded") {
-        console.warn("Booking saved, but email not sent because daily email quota is exhausted.");
-        return;
-      }
-
-      if (data.status !== "success") {
-        console.error("Background email failed:", data.message || data);
-      }
-    })
-    .catch(err => {
-      console.error("Background email fetch error:", err);
-    });
+.dot-full {
+  background: var(--warning);
 }
 
-function openSlipWithReference(refCode, fullname, service, date, time) {
-  closeModal("confirmModal");
-
-  dailySlotCache = {};
-  monthlyBooked = {};
-
-  document.getElementById("sRef").textContent = refCode;
-  document.getElementById("sName").textContent = fullname.toUpperCase();
-  document.getElementById("sService").textContent = service;
-  document.getElementById("sDate").textContent = formatAppointmentDate(date);
-  document.getElementById("sTime").textContent = time;
-
-  const qrPayload =
-    "Reference: " + refCode + "\n" +
-    "Name: " + fullname.toUpperCase() + "\n" +
-    "Service: " + service + "\n" +
-    "Date: " + formatAppointmentDate(date) + "\n" +
-    "Time: " + time;
-
-  drawSlipQR(qrPayload);
-  openModal("slipModal");
-
-  const calendar = document.getElementById("date")._flatpickr;
-  if (calendar) {
-    fetchMonthlyData(calendar);
-  }
+.dot-closed {
+  background: var(--closed);
 }
 
-async function verifyTimedOutBooking(payload, retries = 4, delayMs = 2000) {
-  for (let attempt = 0; attempt < retries; attempt++) {
-    try {
-      const res = await postJson({
-        action: "checkRecentBooking",
-        service: payload.service,
-        fullname: payload.fullname,
-        email: payload.email,
-        phone: payload.phone,
-        date: payload.date,
-        time: payload.time
-      });
-
-      const data = await res.json();
-
-      if (data.status === "found" && data.refCode) {
-        return data;
-      }
-    } catch (err) {
-      console.error("verifyTimedOutBooking error:", err);
-    }
-
-    if (attempt < retries - 1) {
-      await new Promise(resolve => setTimeout(resolve, delayMs));
-    }
-  }
-
-  return null;
+.service-info small {
+  color: #4b5563;
+  display: block;
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
-/* ================= SETTINGS ================= */
+/* ================= MODALS ================= */
 
-async function loadSystemSettings() {
-  try {
-    const res = await postJson({ action: "getSystemSettings" });
-    const data = await res.json();
+.modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.55);
+  z-index: 9999;
+  padding: 20px;
+  overflow-y: auto;
+  backdrop-filter: blur(4px);
+}
 
-    if (data.status === "success" && data.systemSettings) {
-      systemSettings = data.systemSettings;
-      bookingWindowEndDate = data.bookingWindowEndDate || null;
-    } else {
-      systemSettings = {
-        saturdayOpen: false,
-        sundayOpen: false,
-        bookingWindowMonths: 1
-      };
-      bookingWindowEndDate = null;
-    }
-  } catch (err) {
-    console.error("loadSystemSettings error:", err);
-    systemSettings = {
-      saturdayOpen: false,
-      sundayOpen: false,
-      bookingWindowMonths: 1
-    };
-    bookingWindowEndDate = null;
-  }
+.modal-content {
+  background: #ffffff;
+  width: 100%;
+  max-width: 520px;
+  max-height: min(88vh, 900px);
+  overflow-y: auto;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(215, 224, 234, 0.9);
+  font-size: 14px;
+  line-height: 1.65;
+  margin: auto;
+}
 
-  updateWeekendNotice();
+.modal-content h2,
+.modal-content h3 {
+  text-align: center;
+  font-size: 19px;
+  margin: 0 0 14px;
+  color: #162033;
+}
 
-  const dateInput = document.getElementById("date");
-  if (dateInput && dateInput._flatpickr) {
-    dateInput._flatpickr.redraw();
-  }
+.modal-content p {
+  margin-bottom: 14px;
+  text-align: justify;
+}
+
+.modal-content ul {
+  padding-left: 18px;
+  margin-bottom: 15px;
+}
+
+.modal-content li {
+  margin-bottom: 6px;
+}
+
+.modal-content button {
+  width: 100%;
+  margin-top: 16px;
+}
+
+/* ================= CHECKMARK ================= */
+
+.checkmark-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  z-index: 9999;
+}
+
+.checkmark-circle {
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  background: var(--success);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: pop 0.4s ease forwards;
+  box-shadow: 0 12px 28px rgba(22, 163, 74, 0.3);
+}
+
+.checkmark {
+  width: 25px;
+  height: 50px;
+  border-right: 6px solid white;
+  border-bottom: 6px solid white;
+  transform: rotate(45deg);
+}
+
+.checkmark-text {
+  color: white;
+  font-size: 18px;
+  margin-top: 15px;
+  font-weight: 700;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ================= LOADING ================= */
+
+.loading {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-top: 2px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+/* ================= FORM DISABLED ================= */
+
+.form-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+  user-select: none;
+}
+
+.form-disabled input,
+.form-disabled select,
+.form-disabled button {
+  cursor: not-allowed;
+}
+
+/* ================= FLATPICKR ================= */
+
+.flatpickr-calendar {
+  border-radius: 18px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.24);
+  border: none;
+  overflow: hidden;
+  font-family: "Segoe UI", sans-serif;
+  backdrop-filter: blur(10px);
+}
+
+.flatpickr-months {
+  background: linear-gradient(135deg, var(--primary), #2f5fa5);
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.flatpickr-current-month {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #ffffff !important;
+  text-transform: uppercase;
+}
+
+.flatpickr-current-month .cur-year,
+.flatpickr-current-month input.cur-year,
+.flatpickr-current-month select {
+  color: #ffffff !important;
+  font-weight: 700;
+  background: transparent;
+  border: none;
+}
+
+.flatpickr-prev-month,
+.flatpickr-next-month {
+  top: 12px;
+}
+
+.flatpickr-prev-month svg,
+.flatpickr-next-month svg {
+  fill: #ffffff !important;
+  width: 18px;
+  height: 18px;
+}
+
+.flatpickr-weekdays {
+  background: #f5f7fb;
+}
+
+.flatpickr-weekday {
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.flatpickr-day {
+  position: relative !important;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.flatpickr-day:hover {
+  background: rgba(36, 89, 166, 0.1);
+}
+
+.flatpickr-day.today {
+  border: 2px solid rgba(36, 89, 166, 0.6);
+}
+
+.flatpickr-day.selected {
+  background: var(--primary);
+  color: white;
+  border: none;
+  box-shadow: 0 6px 16px rgba(36, 89, 166, 0.35);
+}
+
+.flatpickr-day.disabled {
+  color: #ccc;
+}
+
+.flatpickr-calendar.open {
+  animation: fadeInScale 0.25s ease;
+}
+
+@keyframes fadeInScale {
+  0% { opacity: 0; transform: scale(0.96); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.slot-dot {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.slot-dot.many {
+  background: var(--success);
+  box-shadow: 0 0 4px rgba(22, 163, 74, 0.6);
+}
+
+.slot-dot.few {
+  background: var(--warning);
+  box-shadow: 0 0 4px rgba(245, 158, 11, 0.6);
+}
+
+.slot-dot.full {
+  background: var(--danger);
+  box-shadow: 0 0 4px rgba(220, 38, 38, 0.6);
+}
+
+.slot-dot.closed {
+  background: var(--closed);
+  box-shadow: 0 0 4px rgba(209, 213, 219, 0.6);
+}
+
+.has-tooltip {
+  position: relative;
+}
+
+.has-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e293b;
+  color: white;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 10;
+}
+
+.has-tooltip:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.has-tooltip::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: #1e293b transparent transparent transparent;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.has-tooltip:hover::before {
+  opacity: 1;
 }
 
 /* ================= CONFIRM MODAL ================= */
 
-function openConfirmModal() {
-  const service = document.getElementById("service").value;
-  const date = document.getElementById("date").value;
-  const time = document.getElementById("time").value;
-  const applicant = validateApplicantFields(true);
-  const fullname = applicant.fullname;
-  const email = applicant.email;
-  const phone = applicant.phone;
-
-  if (!service || !date || !time || !fullname) {
-    showSystemMessage("Missing Fields", "Please complete all required fields before proceeding.");
-    updateStepState();
-    return;
-  }
-
-  if (!applicant.valid) {
-    showSystemMessage("Check Your Details", "Please review the highlighted applicant information.");
-    updateStepState();
-    return;
-  }
-
-  document.getElementById("cName").textContent = fullname;
-  document.getElementById("cService").textContent = service;
-  document.getElementById("cDate").textContent = formatPrettyDate(date);
-  document.getElementById("cTime").textContent = time;
-
-  resetConfirmButtons();
-  openModal("confirmModal");
+.confirm-modal-card {
+  max-width: 560px;
+  padding: 28px 24px 22px;
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.16);
+  border: 1px solid rgba(215, 224, 234, 0.85);
 }
 
-function confirmSubmit() {
-  setConfirmLoading(true, "Submitting appointment request...");
-  submitForm();
+.confirm-header {
+  text-align: center;
+  margin-bottom: 18px;
 }
 
-/* ================= SLOT CHECK ================= */
-
-function checkSlots() {
-  const service = document.getElementById("service").value;
-  const date = document.getElementById("date").value;
-  const time = document.getElementById("time").value;
-
-  setApplicantFieldsDisabled(true);
-
-  if (!service) {
-    setAvailabilityInfo("Select a service to continue.");
-    return;
-  }
-
-  if (!date) {
-    setAvailabilityInfo("Select a date first.");
-    return;
-  }
-
-  if (!time) {
-    setAvailabilityInfo("Select a time to continue.");
-    return;
-  }
-
-  const cacheKey = `${service}_${date}_${time}`;
-  const dateCacheKey = `${service}_${date}`;
-
-  if (dailySlotCache[cacheKey]) {
-    applySlotAvailabilityResult(dailySlotCache[cacheKey]);
-    return;
-  }
-
-  if (dateSlotCache[dateCacheKey]) {
-    const found = dateSlotCache[dateCacheKey].find(item => item.time === time);
-    if (found) {
-      const normalized = {
-        open: found.open,
-        reason: found.reason || "",
-        remaining: Number(found.remaining ?? 0),
-        max: Number(found.max ?? 0)
-      };
-      dailySlotCache[cacheKey] = normalized;
-      applySlotAvailabilityResult(normalized);
-      return;
-    }
-  }
-
-  setAvailabilityInfo("Checking slot availability...", "#475467");
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 20000);
-
-  postJson({
-    action: "slots",
-    date,
-    service,
-    time
-  }, {
-    signal: controller.signal
-  })
-    .then(res => res.json())
-    .then(data => {
-      clearTimeout(timeoutId);
-      dailySlotCache[cacheKey] = data;
-      applySlotAvailabilityResult(data);
-    })
-    .catch(err => {
-      clearTimeout(timeoutId);
-      console.error("checkSlots error:", err);
-      setAvailabilityInfo("Unable to check slot availability.", "#b42318");
-      setApplicantFieldsDisabled(true);
-    });
+.confirm-modal-card h2 {
+  margin: 0 0 8px;
+  font-size: 23px;
+  font-weight: 800;
+  color: #18212f;
+  letter-spacing: -0.02em;
 }
 
-/* ================= MODAL CLOSE HELPERS ================= */
-
-window.closeNidModal = () => closeModal("nidModal");
-window.closeUpdateModal = () => closeModal("updateModal");
-window.closeEphilidModal = () => closeModal("ephilidModal");
-window.closeTrnModal = () => closeModal("trnModal");
-window.closeSystemModal = () => {
-  if (systemMessageAutoTimer) {
-    clearTimeout(systemMessageAutoTimer);
-    systemMessageAutoTimer = null;
-  }
-  closeModal("systemModal");
-};
-
-/* ================= SLIP ACTIONS ================= */
-
-window.closeSlip = function() {
-  closeModal("slipModal");
-  showCheckmark();
-  resetForm();
-  resetConfirmButtons();
-};
-
-window.printSlip = function() {
-  const slip = document.getElementById("printableSlip");
-  const qrCanvas = document.getElementById("qrCanvas");
-
-  if (!slip) return;
-
-  const printWindow = window.open("", "_blank", "width=900,height=700");
-  if (!printWindow) {
-    showSystemMessage("Popup Blocked", "Please allow popups to print the appointment slip.");
-    return;
-  }
-
-  let slipHtml = slip.outerHTML;
-
-  if (qrCanvas) {
-    const qrDataUrl = qrCanvas.toDataURL("image/png");
-    slipHtml = slipHtml.replace(
-      /<canvas id="qrCanvas"[^>]*><\/canvas>/i,
-      `<img src="${qrDataUrl}" alt="QR Code" style="width:88px;height:88px;display:block;">`
-    );
-  }
-
-  slipHtml = slipHtml.replace(
-    /<div class="slip-actions compact-actions" data-no-export="true">[\s\S]*?<\/div>/i,
-    ""
-  );
-
-  const printStyles = `
-    <style>
-      * { box-sizing: border-box; }
-      html, body {
-        margin: 0;
-        padding: 0;
-        background: #ffffff;
-        font-family: "Segoe UI", Arial, sans-serif;
-        color: #1f2937;
-      }
-      body { padding: 18px; }
-      #printArea {
-        width: 100%;
-        max-width: 540px;
-        margin: 0 auto;
-      }
-      .slip-card {
-        width: 100%;
-        border-radius: 20px;
-        padding: 18px 18px 16px;
-        background: #ffffff;
-        border: 1px solid #dbe4ef;
-      }
-      .slip-header {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 8px;
-      }
-      .slip-logo {
-        width: 52px;
-        height: 52px;
-        object-fit: contain;
-      }
-      .slip-title {
-        text-align: center;
-        margin: 0 0 4px;
-        color: #1f4f9a;
-        font-size: 18px;
-        font-weight: 800;
-        line-height: 1.2;
-      }
-      .slip-subtitle {
-        display: block;
-        width: 100%;
-        text-align: center;
-        margin: 0 auto;
-        color: #667085;
-        font-size: 12px;
-        line-height: 1.4;
-      }
-      .slip-divider {
-        height: 2px;
-        background: #1f5aa8;
-        margin: 12px 0;
-        border-radius: 999px;
-      }
-      .slip-qr-wrap {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin: 2px 0 14px;
-      }
-      .slip-qr-box {
-        background: #ffffff;
-        padding: 8px;
-        border-radius: 12px;
-        border: 1px solid #dbe5f0;
-      }
-      .slip-qr-note {
-        margin-top: 6px;
-        font-size: 11px;
-        color: #667085;
-        text-align: center;
-      }
-      .slip-details {
-        display: grid;
-        gap: 0;
-        border: 1px solid #dbe5f0;
-        border-radius: 16px;
-        overflow: hidden;
-        background: #fcfdff;
-      }
-      .slip-item {
-        display: grid;
-        grid-template-columns: 135px 1fr;
-        gap: 12px;
-        padding: 11px 16px;
-        border-bottom: 1px solid #e5edf6;
-        align-items: start;
-      }
-      .slip-item:last-child { border-bottom: none; }
-      .slip-label {
-        font-size: 11px;
-        font-weight: 700;
-        color: #667085;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        padding-top: 2px;
-      }
-      .slip-value {
-        font-size: 14px;
-        font-weight: 700;
-        color: #1f2937;
-        line-height: 1.45;
-        text-align: right;
-        word-break: break-word;
-      }
-      .slip-reminder {
-        margin-top: 12px;
-        padding: 10px 12px;
-        border-radius: 12px;
-        background: #fff8e8;
-        border: 1px solid #f2d38a;
-        color: #6b4e16;
-      }
-      .slip-reminder-title {
-        font-size: 12px;
-        font-weight: 800;
-        text-align: center;
-        margin-bottom: 6px;
-      }
-      .slip-reminder-text {
-        margin: 0;
-        font-size: 11px;
-        line-height: 1.4;
-        text-align: center;
-      }
-      .slip-actions { display: none !important; }
-      img { max-width: 100%; }
-    </style>
-  `;
-
-  printWindow.document.open();
-  printWindow.document.write(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="UTF-8">
-        <title>Print Appointment Slip</title>
-        ${printStyles}
-      
-  <style>
-    .wizard-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
-    .wizard-step{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #d0d5dd;border-radius:14px;background:#f8fafc;transition:.2s}
-    .wizard-step.active{border-color:#2b62b7;background:#eef4ff;box-shadow:0 0 0 3px rgba(43,98,183,.08)}
-    .wizard-step.done{border-color:#157347;background:#ecfdf3}
-    .wizard-step .step-number{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:#dbe7ff;color:#1e4f9f;flex:none}
-    .wizard-step.done .step-number{background:#198754;color:#fff}
-    .wizard-step-label{display:flex;flex-direction:column;line-height:1.15}
-    .wizard-step-label small{color:#667085;font-size:12px}
-    .wizard-note{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;margin-bottom:18px;border-radius:14px;background:linear-gradient(135deg,#eef4ff,#f8fbff);border:1px solid #dbe7ff}
-    .wizard-note strong{color:#1d4f91}
-    .step-section{position:relative}
-    .step-section::before{content:attr(data-step-label);display:inline-block;margin-bottom:10px;padding:5px 10px;border-radius:999px;background:#eff6ff;color:#1d4f91;font-size:12px;font-weight:700;letter-spacing:.02em}
-    .quick-guide{display:none;margin-top:12px;padding:14px;border-radius:14px;background:#f8fafc;border:1px solid #d0d5dd}
-    .quick-guide.show{display:block}
-    .quick-guide h4{margin:0 0 8px;font-size:15px;color:#1d2939}
-    .quick-guide p{margin:0 0 8px;color:#475467}
-    .quick-points{margin:0;padding-left:18px;color:#475467}
-    .quick-guide-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-    .outline-btn,.ghost-btn{appearance:none;border:none;cursor:pointer;border-radius:10px;padding:10px 14px;font-weight:600}
-    .outline-btn{background:#fff;border:1px solid #2b62b7;color:#2b62b7}
-    .ghost-btn{background:#eef4ff;color:#1d4f91}
-    .time-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0 6px}
-    .time-chip{border:1px solid #d0d5dd;border-radius:12px;background:#fff;padding:12px;text-align:left;display:flex;flex-direction:column;gap:4px;cursor:pointer;transition:.2s}
-    .time-chip:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(16,24,40,.08)}
-    .time-chip strong{font-size:14px;color:#101828}
-    .time-chip small{font-size:12px;color:#667085}
-    .time-chip.available{border-color:#b7ebc6;background:#f6fffa}
-    .time-chip.full,.time-chip.closed{background:#f9fafb;color:#98a2b3}
-    .time-chip.full strong,.time-chip.closed strong{color:#667085}
-    .time-chip.selected{border-color:#2b62b7;background:#eef4ff;box-shadow:0 0 0 3px rgba(43,98,183,.12)}
-    .time-chip:disabled{cursor:not-allowed;opacity:.85;transform:none;box-shadow:none}
-    .time-chip.loading{align-items:center;justify-content:center;text-align:center;min-height:72px}
-    .inline-error{display:none;margin-top:6px;color:#b42318;font-size:12px}
-    .field-error{border-color:#f04438 !important;box-shadow:0 0 0 3px rgba(240,68,56,.1)}
-    .helper-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
-    .summary-box.enhanced{border:1px solid #d0d5dd;background:#f8fafc}
-    .summary-box.enhanced h4{margin-bottom:12px}
-    .summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
-    .summary-item{padding:12px;border-radius:12px;background:#fff;border:1px solid #e4e7ec}
-    .summary-item span{display:block;color:#667085;font-size:12px;margin-bottom:4px}
-    .summary-item strong{color:#101828;font-size:14px;word-break:break-word}
-    .summary-progress{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}
-    .summary-pill{padding:10px 12px;border-radius:999px;background:#fff;border:1px solid #d0d5dd;text-align:center;font-size:12px;font-weight:700;color:#667085}
-    .summary-pill.done{background:#ecfdf3;border-color:#abeFC6;color:#067647}
-    .summary-pill.active{background:#eef4ff;border-color:#b2ccff;color:#1d4f91}
-    .submit-wrap{display:flex;flex-direction:column;gap:10px}
-    .submit-subtext{font-size:12px;color:#667085;text-align:center}
-    .service-link{font-size:12px;color:#2b62b7;font-weight:600;cursor:pointer;text-decoration:underline}
-    .soft-note{font-size:12px;color:#667085}
-    @media (max-width:700px){
-      .wizard-steps,.summary-progress,.summary-grid,.time-grid{grid-template-columns:1fr}
-      .wizard-note{align-items:flex-start}
-    }
-  </style>
-
-</head>
-      <body>
-        <div id="printArea">${slipHtml}</div>
-      
-  <footer class="official-footer">
-    <div class="official-footer-inner">
-      <div class="official-footer-brand">
-        <strong>Philippine Statistics Authority</strong>
-        <span>National ID Appointment Request</span>
-      </div>
-      <div class="official-footer-meta">
-        <span>PSA Cebu Fixed Registration Center</span>
-        <span>For official scheduling use only</span>
-      </div>
-    </div>
-  </footer>
-
-</body>
-    </html>
-  `);
-  printWindow.document.close();
-
-  setTimeout(() => {
-    printWindow.focus();
-    printWindow.print();
-  }, 800);
-};
-
-window.downloadSlip = async function() {
-  const originalSlip = document.getElementById("printableSlip");
-  if (!originalSlip) return;
-
-  let tempWrapper = null;
-
-  try {
-    const clone = originalSlip.cloneNode(true);
-
-    clone.querySelectorAll('[data-no-export="true"], .slip-actions').forEach(el => el.remove());
-
-    const originalCanvas = document.getElementById("qrCanvas");
-    const clonedCanvas = clone.querySelector("#qrCanvas");
-
-    if (originalCanvas && clonedCanvas) {
-      const qrImg = document.createElement("img");
-      qrImg.src = originalCanvas.toDataURL("image/png");
-      qrImg.alt = "QR Code";
-      qrImg.style.width = "88px";
-      qrImg.style.height = "88px";
-      qrImg.style.display = "block";
-      clonedCanvas.replaceWith(qrImg);
-    }
-
-    tempWrapper = document.createElement("div");
-    tempWrapper.style.position = "fixed";
-    tempWrapper.style.left = "-99999px";
-    tempWrapper.style.top = "0";
-    tempWrapper.style.background = "#ffffff";
-    tempWrapper.style.padding = "0";
-    tempWrapper.style.margin = "0";
-    tempWrapper.style.zIndex = "-1";
-
-    clone.style.width = "372px";
-    clone.style.maxWidth = "372px";
-    clone.style.margin = "0 auto";
-    clone.style.boxShadow = "none";
-    clone.style.transform = "none";
-    clone.style.background = "#ffffff";
-
-    tempWrapper.appendChild(clone);
-    document.body.appendChild(tempWrapper);
-
-    await new Promise(resolve => setTimeout(resolve, 180));
-
-    const canvas = await html2canvas(clone, {
-      scale: 3,
-      useCORS: true,
-      backgroundColor: "#ffffff",
-      logging: false
-    });
-
-    const link = document.createElement("a");
-    link.download = "National_ID_Appointment_Slip.png";
-    link.href = canvas.toDataURL("image/png");
-    link.click();
-
-  } catch (err) {
-    console.error("downloadSlip error:", err);
-    showSystemMessage("Download Error", "Unable to generate appointment slip image.");
-  } finally {
-    if (tempWrapper && tempWrapper.parentNode) {
-      tempWrapper.parentNode.removeChild(tempWrapper);
-    }
-  }
-};
-
-/* ================= SUBMIT FORM ================= */
-
-window.submitForm = async function() {
-  const btn = document.getElementById("submitBtn");
-  const btnText = document.getElementById("btnText");
-  const loader = document.getElementById("btnLoader");
-
-  const service = document.getElementById("service").value;
-  const fullname = document.getElementById("fullname").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-  const date = document.getElementById("date").value;
-  const time = document.getElementById("time").value;
-
-  if (!service || !fullname || !date || !time) {
-    resetConfirmButtons();
-    showSystemMessage("Missing Fields", "Please complete all required fields.");
-    return;
-  }
-
-  if (!email && !phone) {
-    resetConfirmButtons();
-    showSystemMessage("Contact Required", "Provide at least email OR mobile number.");
-    return;
-  }
-
-  btn.disabled = true;
-  btnText.style.display = "none";
-  loader.style.display = "inline-block";
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 60000);
-
-  try {
-    const res = await postJson({
-      action: "submitAppointment",
-      service,
-      fullname,
-      email,
-      phone,
-      date,
-      time
-    }, {
-      signal: controller.signal
-    });
-
-    const r = await res.json();
-    clearTimeout(timeoutId);
-
-    btn.disabled = false;
-    btnText.style.display = "inline";
-    loader.style.display = "none";
-    resetConfirmButtons();
-
-    if (r.status === "error") {
-      return showSystemMessage("Notice", r.message || "System error.");
-    }
-
-    if (r.status === "duplicate_name") {
-      return showSystemMessage("Duplicate Appointment", "You already have an appointment on this date.");
-    }
-
-    if (r.status === "duplicate_email") {
-      return showSystemMessage("Duplicate Email", "This email already has an appointment on this date.");
-    }
-
-    if (r.status === "duplicate_phone") {
-      return showSystemMessage("Duplicate Phone", "This mobile number already has an appointment on this date.");
-    }
-
-    if (r.status === "closed_date") {
-      return showSystemMessage("Booking Closed", r.reason || "Booking is not available on the selected date.");
-    }
-
-    if (r.status === "daily_full") {
-      return showSystemMessage("Fully Booked", "This service is fully booked on the selected date and time.");
-    }
-
-    if (r.status === "busy") {
-      return showSystemMessage("Please Try Again", r.message || "The system is currently busy. Please try again in a few seconds.");
-    }
-
-    if (r.status === "success") {
-      openSlipWithReference(r.refCode, fullname, service, date, time);
-
-      if (email) {
-        sendConfirmationEmailInBackground({
-          refCode: r.refCode,
-          fullname: fullname.toUpperCase(),
-          service: service,
-          date: date,
-          time: time,
-          email: email
-        });
-      }
-
-      return;
-    }
-
-    showSystemMessage("Notice", r.message || "Unexpected response from server.");
-
-  } catch (err) {
-    clearTimeout(timeoutId);
-
-    btn.disabled = false;
-    btnText.style.display = "inline";
-    loader.style.display = "none";
-
-    console.error("submitForm error:", err);
-
-    if (err.name === "AbortError") {
-      setConfirmLoading(true, "Request timed out. Checking if your booking was recorded...");
-
-      const verified = await verifyTimedOutBooking({
-        service,
-        fullname,
-        email,
-        phone,
-        date,
-        time
-      });
-
-      resetConfirmButtons();
-
-      if (verified && verified.refCode) {
-        showSystemMessageAuto(
-          "Booking Recorded",
-          "Your appointment was successfully recorded. Opening your appointment slip...",
-          () => {
-            openSlipWithReference(verified.refCode, fullname, service, date, time);
-          },
-          1500
-        );
-        return;
-      }
-
-      showSystemMessage(
-        "Not Yet Recorded",
-        "The request timed out and no booking record was found in the system yet. Please tap Confirm Appointment again after a few seconds."
-      );
-      return;
-    }
-
-    resetConfirmButtons();
-    showSystemMessage("System Error", "Unable to connect to server.");
-  }
-};
-
-/* ================= MONTHLY CALENDAR DATA ================= */
-
-function fetchMonthlyData(instance, options = {}) {
-  const service = document.getElementById("service").value;
-  const keepOpen = !!options.keepOpen;
-  const wasOpen = !!(instance && instance.isOpen);
-
-  if (!service) {
-    monthlyBooked = {};
-    updateWeekendNotice();
-    instance.redraw();
-
-    setDateInputDisabled(true);
-    setTimeInputDisabled(true);
-    setApplicantFieldsDisabled(true);
-    setAvailabilityInfo("Select a service first to load available dates.");
-    if (instance && instance.calendarContainer) instance.calendarContainer.classList.remove("calendar-loading");
-    return;
-  }
-
-  const currentMonth = normalizeMonthString(instance.currentYear, instance.currentMonth);
-  const cacheKey = `${service}__${currentMonth}`;
-  const requestId = ++activeCalendarRequestId;
-
-  // Keep the date input active so the calendar popup does not close
-  // while the next month is loading.
-  setTimeInputDisabled(true);
-  setApplicantFieldsDisabled(true);
-  setAvailabilityInfo("Loading calendar...", "#475467");
-
-  const calendarEl = instance && instance.calendarContainer ? instance.calendarContainer : null;
-  if (calendarEl) calendarEl.classList.add("calendar-loading");
-
-  if (monthlySlotCache[cacheKey]) {
-    const cached = monthlySlotCache[cacheKey];
-
-    monthlyBooked = cached.slots || {};
-    systemSettings = cached.systemSettings || systemSettings;
-    bookingWindowEndDate = cached.bookingWindowEndDate || bookingWindowEndDate;
-
-    updateWeekendNotice();
-    updateBookingWindowBadge();
-    instance.redraw();
-
-    setDateInputDisabled(false);
-    setTimeInputDisabled(!document.getElementById("date").value);
-    setAvailabilityInfo("Select a date to load available time slots.");
-    if (calendarEl) calendarEl.classList.remove("calendar-loading");
-    if (keepOpen || wasOpen) {
-      requestAnimationFrame(() => {
-        try { instance.open(); } catch (e) {}
-      });
-    }
-    updateStepState();
-    return;
-  }
-
-  postJson({
-    action: "monthlySlots",
-    service: service,
-    month: currentMonth
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (requestId !== activeCalendarRequestId) return;
-
-      if (data.status === "error") {
-        throw new Error(data.message || "Unable to load monthly slots.");
-      }
-
-      monthlySlotCache[cacheKey] = data;
-      monthlyBooked = data.slots || {};
-      systemSettings = data.systemSettings || systemSettings;
-      bookingWindowEndDate = data.bookingWindowEndDate || bookingWindowEndDate;
-
-      updateWeekendNotice();
-      updateBookingWindowBadge();
-      instance.redraw();
-
-      setDateInputDisabled(false);
-      setTimeInputDisabled(!document.getElementById("date").value);
-      setAvailabilityInfo("Select a date to load available time slots.");
-      if (calendarEl) calendarEl.classList.remove("calendar-loading");
-      if (keepOpen || wasOpen) {
-        requestAnimationFrame(() => {
-          try { instance.open(); } catch (e) {}
-        });
-      }
-      updateStepState();
-    })
-    .catch(err => {
-      if (requestId !== activeCalendarRequestId) return;
-
-      console.error("Monthly fetch error:", err);
-      updateWeekendNotice();
-      updateBookingWindowBadge();
-      instance.redraw();
-
-      setDateInputDisabled(false);
-      setTimeInputDisabled(true);
-      setApplicantFieldsDisabled(true);
-      renderTimeGrid([]);
-      setAvailabilityInfo("Unable to load available dates. Please try again.", "#b42318");
-      if (calendarEl) calendarEl.classList.remove("calendar-loading");
-      if (keepOpen || wasOpen) {
-        requestAnimationFrame(() => {
-          try { instance.open(); } catch (e) {}
-        });
-      }
-      updateStepState();
-    });
+.confirm-subtext {
+  margin: 0;
+  font-size: 14px;
+  color: #667085;
+  line-height: 1.5;
+  text-align: center !important;
 }
 
-/* ================= DOM READY ================= */
+.confirm-summary-card {
+  background: linear-gradient(180deg, #fcfdff 0%, #f8fbff 100%);
+  border: 1px solid #dbe5f0;
+  border-radius: 18px;
+  overflow: hidden;
+  margin-bottom: 18px;
+}
 
-document.addEventListener("DOMContentLoaded", function() {
-  const serviceSelect = document.getElementById("service");
-  const timeSelect = document.getElementById("time");
+.confirm-item {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 18px;
+  align-items: start;
+  padding: 14px 18px;
+  border-bottom: 1px solid #e6edf5;
+}
 
-  setFormDisabled(true);
-  openModal("privacyModal");
-  loadSystemSettings();
+.confirm-item:last-child {
+  border-bottom: none;
+}
 
-  document.getElementById("fullname").addEventListener("input", function() {
-    this.value = this.value
-      .toUpperCase()
-      .replace(/\s+/g, " ")
-      .replace(/^\s+/, "");
-    validateApplicantFields(true);
-    updateSummary();
-  });
+.confirm-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #667085;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding-top: 2px;
+}
 
-  document.getElementById("email").addEventListener("input", function() {
-    validateApplicantFields(true);
-    updateSummary();
-  });
+.confirm-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1f2937;
+  text-align: right;
+  line-height: 1.45;
+  word-break: break-word;
+}
 
-  document.getElementById("phone").addEventListener("input", function() {
-    this.value = this.value.replace(/[^0-9]/g, "").slice(0, 11);
-    validateApplicantFields(true);
-    updateSummary();
-  });
+.confirm-item:nth-child(2) .confirm-value {
+  font-size: 14px;
+  line-height: 1.55;
+}
 
-  document.getElementById("service").addEventListener("change", updateSummary);
-  document.getElementById("date").addEventListener("change", updateSummary);
-  document.getElementById("time").addEventListener("change", updateSummary);
+.confirm-actions {
+  display: grid;
+  gap: 10px;
+}
 
-  updateSummary();
-  updateBookingWindowBadge();
+.confirm-actions button {
+  margin-top: 0;
+  min-height: 48px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+}
 
-  const calendar = flatpickr("#date", {
-    dateFormat: "Y-m-d",
-    altInput: true,
-    altFormat: "j F Y",
-    minDate: new Date(),
-    disableMobile: true,
-    monthSelectorType: "static",
+.confirm-primary {
+  background: linear-gradient(180deg, #2b63b1 0%, #2459a6 100%);
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(36, 89, 166, 0.2);
+}
 
-    onReady: function(selectedDates, dateStr, instance) {
-      fetchMonthlyData(instance);
-    },
+.confirm-primary:hover {
+  background: linear-gradient(180deg, #23569b 0%, #1b4684 100%);
+}
 
-    onMonthChange: function(selectedDates, dateStr, instance) {
-      const badge = document.getElementById("bookingWindowBadge");
-      if (badge) badge.textContent = "Loading calendar...";
-      fetchMonthlyData(instance, { keepOpen: true });
-    },
+.confirm-secondary {
+  background: #f8fafc;
+  color: #2459a6;
+  border: 1px solid #d7e1ec;
+  box-shadow: none;
+}
 
-    onDayCreate: function(dObj, dStr, fp, dayElem) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+.confirm-secondary:hover {
+  background: #eef3f9;
+  color: #1b4684;
+}
 
-      if (dayElem.dateObj < today) {
-        dayElem.classList.add("flatpickr-disabled");
-        dayElem.style.pointerEvents = "none";
-        return;
-      }
+/* ================= SLIP MODAL ================= */
 
-      const year = dayElem.dateObj.getFullYear();
-      const month = String(dayElem.dateObj.getMonth() + 1).padStart(2, "0");
-      const day = String(dayElem.dateObj.getDate()).padStart(2, "0");
-      const date = `${year}-${month}-${day}`;
+#slipModal {
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+}
 
-      const service = document.getElementById("service").value;
-      const dayOfWeek = dayElem.dateObj.getDay();
-      const isSaturday = dayOfWeek === 6;
-      const isSunday = dayOfWeek === 0;
+#slipContent {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: min(100%, 430px);
+  max-width: 430px;
+  max-height: 92vh;
+  overflow-y: auto;
+  padding: 10px;
+  border-radius: 22px;
+  text-align: center;
+  background: #ffffff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.22);
+}
 
-      const oldDot = dayElem.querySelector(".slot-dot");
-      if (oldDot) oldDot.remove();
+#printableSlip,
+.slip-card {
+  display: block;
+  width: 100%;
+  max-width: 390px;
+  margin: 0 auto;
+  padding: 14px 14px 12px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid #dbe4ef;
+  box-shadow: none;
+}
 
-      dayElem.classList.remove("has-tooltip", "flatpickr-disabled", "calendar-closed-day", "calendar-full-day");
-      dayElem.removeAttribute("data-tooltip");
-      dayElem.style.pointerEvents = "";
+.slip-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
 
-      if (bookingWindowEndDate && date > bookingWindowEndDate) {
-        dayElem.classList.add("flatpickr-disabled", "calendar-closed-day", "has-tooltip");
-        dayElem.style.pointerEvents = "none";
-        dayElem.setAttribute("data-tooltip", "Outside booking window");
+.slip-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
 
-        const dot = document.createElement("span");
-        dot.className = "slot-dot closed";
-        dayElem.appendChild(dot);
-        return;
-      }
+.slip-title {
+  margin: 0 0 4px;
+  text-align: center;
+  color: #1f4f9a;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.2;
+}
 
-      if (isSaturday && !systemSettings.saturdayOpen) {
-        dayElem.classList.add("flatpickr-disabled", "calendar-closed-day", "has-tooltip");
-        dayElem.style.pointerEvents = "none";
-        dayElem.setAttribute("data-tooltip", "Saturday closed");
+.slip-subtitle {
+  display: block;
+  width: 100%;
+  margin: 0 auto;
+  text-align: center;
+  color: #667085;
+  font-size: 11px;
+  line-height: 1.35;
+}
 
-        const dot = document.createElement("span");
-        dot.className = "slot-dot closed";
-        dayElem.appendChild(dot);
-        return;
-      }
+.slip-divider {
+  height: 2px;
+  margin: 10px 0 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #1f5aa8, #4679c2);
+}
 
-      if (isSunday && !systemSettings.sundayOpen) {
-        dayElem.classList.add("flatpickr-disabled", "calendar-closed-day", "has-tooltip");
-        dayElem.style.pointerEvents = "none";
-        dayElem.setAttribute("data-tooltip", "Sunday closed");
+.slip-qr-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0 12px;
+}
 
-        const dot = document.createElement("span");
-        dot.className = "slot-dot closed";
-        dayElem.appendChild(dot);
-        return;
-      }
+.slip-qr-box {
+  background: #ffffff;
+  padding: 7px;
+  border-radius: 12px;
+  border: 1px solid #dbe5f0;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.05);
+}
 
-      if (!service) return;
+#qrCanvas {
+  display: block;
+  width: 108px;
+  height: 108px;
+}
 
-      const dayData = monthlyBooked[date] || null;
+.slip-qr-note {
+  margin-top: 5px;
+  font-size: 10px;
+  color: #667085;
+  text-align: center;
+}
 
-      let booked = 0;
-      let max = DEFAULT_SLOTS[service] || 0;
-      let open = true;
-      let reason = "";
+.slip-details {
+  display: grid;
+  gap: 0;
+  border: 1px solid #dbe5f0;
+  border-radius: 14px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #fcfdff 0%, #f8fbff 100%);
+  text-align: initial;
+}
 
-      if (dayData) {
-        booked = Number(dayData.booked || 0);
-        max = Number(dayData.max || 0);
-        open = dayData.open !== false;
-        reason = dayData.reason || "";
-      }
+.slip-item {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 8px;
+  align-items: start;
+  padding: 7px 12px;
+  border-bottom: 1px solid #e5edf6;
+  min-height: auto;
+}
 
-      const remaining = max - booked;
+.slip-item:last-child {
+  border-bottom: none;
+}
 
-      if (!open || max <= 0) {
-        dayElem.classList.add("flatpickr-disabled", "calendar-closed-day", "has-tooltip");
-        dayElem.style.pointerEvents = "none";
-        dayElem.setAttribute("data-tooltip", reason || "Booking closed");
+.slip-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #667085;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: left;
+  justify-self: start;
+  align-self: start;
+  line-height: 1.25;
+  padding-top: 1px;
+}
 
-        const dot = document.createElement("span");
-        dot.className = "slot-dot closed";
-        dayElem.appendChild(dot);
-        return;
-      }
+.slip-value {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.35;
+  text-align: right;
+  justify-self: stretch;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
 
-      if (remaining <= 0) {
-        dayElem.classList.add("flatpickr-disabled", "calendar-full-day", "has-tooltip");
-        dayElem.style.pointerEvents = "none";
-        dayElem.setAttribute("data-tooltip", "Fully booked");
+.slip-item-address .slip-value {
+  font-weight: 600;
+  line-height: 1.4;
+}
 
-        const dot = document.createElement("span");
-        dot.className = "slot-dot full";
-        dayElem.appendChild(dot);
-        return;
-      }
+.slip-reminder {
+  margin: 10px 0 0;
+  padding: 10px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fff8e8 0%, #fff3d6 100%);
+  border: 1px solid #f2d38a;
+  color: #6b4e16;
+  text-align: left;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+}
 
-      const dot = document.createElement("span");
-      dot.classList.add("slot-dot", "many");
-      dayElem.appendChild(dot);
+.slip-reminder-title {
+  font-size: 11px;
+  font-weight: 800;
+  margin-bottom: 5px;
+  color: #8a5a00;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
 
-      dayElem.classList.add("has-tooltip");
-      dayElem.setAttribute("data-tooltip", `${remaining} slots left`);
-    },
+.slip-reminder-list {
+  margin: 0;
+  padding-left: 17px;
+}
 
-    onChange: function(selectedDates, dateStr, instance) {
-      document.getElementById("time").value = "";
-      setApplicantFieldsDisabled(true);
+.slip-reminder-list li {
+  margin-bottom: 4px;
+  font-size: 10.8px;
+  line-height: 1.35;
+}
 
-      if (dateStr) {
-        setAvailabilityInfo("Loading available time slots...", "#475467");
-        prefetchTimeSlotsForDate();
-      } else {
-        setTimeInputDisabled(true);
-        renderTimeGrid([]);
-        setAvailabilityInfo("Select a date first.");
-      }
+.slip-reminder-list li:last-child {
+  margin-bottom: 0;
+}
 
-      updateSummary();
-    }
-  });
+.slip-note {
+  margin: 8px 0 0;
+  padding: 8px 9px;
+  border-radius: 11px;
+  background: #f4f8ff;
+  border: 1px solid #dbe7f5;
+  color: #475467;
+  font-size: 10.5px;
+  line-height: 1.35;
+  text-align: center;
+}
 
-  serviceSelect.addEventListener("change", function() {
-    monthlyBooked = {};
-    dailySlotCache = {};
-    resetSlotInfo();
-    renderTimeGrid([]);
+.slip-actions {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
 
-    document.getElementById("time").value = "";
-    document.getElementById("fullname").value = "";
-    document.getElementById("email").value = "";
-    document.getElementById("phone").value = "";
-    ["fullname","email","phone"].forEach(id => setInlineError(id, ""));
+.slip-actions button {
+  margin-top: 0;
+  min-height: 42px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px 12px;
+}
 
-    calendar.clear();
-    calendar.redraw();
-    updateSummary();
+.slip-actions .secondary {
+  background: #f8fafc;
+  color: #2459a6;
+  border: 1px solid #d7e1ec;
+  box-shadow: none;
+}
 
-    ["nidModal", "updateModal", "ephilidModal", "trnModal"].forEach(id => {
-      closeModal(id);
-    });
+.slip-actions .secondary:hover {
+  background: #eef3f9;
+  color: #1b4684;
+}
 
-    if (!this.value) {
-      setDateInputDisabled(true);
-      setTimeInputDisabled(true);
-      setApplicantFieldsDisabled(true);
-      setAvailabilityInfo("Select a service to continue.");
-      updateStepState();
-      return;
-    }
+/* ================= RESPONSIVE ================= */
 
-    setDateInputDisabled(true);
-    setTimeInputDisabled(true);
-    setApplicantFieldsDisabled(true);
-    setAvailabilityInfo("⏳ Loading available dates...", "#555");
+@media (max-width: 768px) {
+  body {
+    padding: 14px;
+  }
 
-    fetchMonthlyData(calendar);
-  });
+  .container {
+    width: 100%;
+    max-width: 100%;
+  }
 
-  timeSelect.addEventListener("change", function() {
-    setApplicantFieldsDisabled(true);
-    updateSummary();
-    checkSlots();
-  });
-});
+  .card.header {
+    padding: 18px 16px 20px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+  }
 
-/* ================= GLOBAL MODAL CLICK ================= */
+  .logos {
+    gap: 8px;
+    margin-bottom: 10px;
+  }
 
-window.addEventListener("click", function(e) {
-  document.querySelectorAll(".modal").forEach(modal => {
-    if (e.target === modal) {
-      if (modal.id === "privacyModal") return;
-      modal.style.display = "none";
-    }
-  });
-});
-</script>
-</body>
-</html>
+  .logo {
+    width: 74px;
+    height: 74px;
+  }
+
+  .card.header h2 {
+    font-size: 22px;
+    margin-bottom: 6px;
+  }
+
+  .card.header p {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  #mainFormCard {
+    padding: 20px 16px 22px;
+    border-radius: 20px;
+  }
+
+  .form-section {
+    margin-bottom: 22px;
+  }
+
+  .section-title {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  label {
+    font-size: 14px;
+  }
+
+  input,
+  select,
+  .card input,
+  .card select {
+    height: 48px;
+    font-size: 16px;
+    padding: 0 14px;
+    border-radius: 12px;
+  }
+
+  .two-col {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .info-banner {
+    margin-top: 12px;
+    padding: 12px 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    border-radius: 14px;
+  }
+
+  .calendar-legend {
+    margin-top: 10px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    gap: 12px;
+  }
+
+  .service-info small,
+  .helper-text {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .summary-box {
+    margin: 18px 0;
+    padding: 14px 15px;
+    border-radius: 14px;
+  }
+
+  .summary-box h4 {
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+
+  .summary-box p {
+    font-size: 14px;
+    margin: 6px 0;
+    line-height: 1.4;
+  }
+
+  #submitBtn {
+    min-height: 48px;
+    font-size: 16px;
+    border-radius: 12px;
+    margin-top: 8px;
+  }
+
+  .modal-content {
+    max-width: 100%;
+    border-radius: 16px;
+    padding: 20px;
+  }
+
+  .modal-content h2,
+  .modal-content h3 {
+    font-size: 17px;
+  }
+
+  .confirm-modal-card {
+    padding: 22px 16px 18px;
+    border-radius: 18px;
+  }
+
+  .confirm-modal-card h2 {
+    font-size: 21px;
+  }
+
+  .confirm-subtext {
+    font-size: 13px;
+  }
+
+  .confirm-summary-card {
+    border-radius: 16px;
+  }
+
+  .confirm-item {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 13px 14px;
+  }
+
+  .confirm-label {
+    font-size: 11px;
+  }
+
+  .confirm-value {
+    text-align: left;
+    font-size: 14px;
+  }
+
+  .confirm-item:nth-child(2) .confirm-value {
+    font-size: 14px;
+  }
+
+  .confirm-actions button {
+    min-height: 47px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  #slipModal {
+    padding: 8px;
+    align-items: center;
+  }
+
+  #slipContent {
+    width: 100%;
+    max-width: 100%;
+    max-height: 92vh;
+    padding: 8px;
+    border-radius: 18px;
+  }
+
+  #printableSlip,
+  .slip-card {
+    max-width: 100%;
+    padding: 12px 10px 10px;
+    border-radius: 16px;
+  }
+
+  .slip-logo {
+    width: 38px;
+    height: 38px;
+  }
+
+  .slip-title {
+    font-size: 15px;
+  }
+
+  .slip-subtitle {
+    font-size: 10px;
+  }
+
+  .slip-divider {
+    margin: 8px 0 10px;
+  }
+
+  .slip-qr-box {
+    padding: 6px;
+  }
+
+  #qrCanvas {
+    width: 92px;
+    height: 92px;
+  }
+
+  .slip-qr-note {
+    font-size: 9.5px;
+  }
+
+  .slip-details {
+    border-radius: 14px;
+  }
+
+  .slip-item {
+    grid-template-columns: 1fr;
+    gap: 3px;
+    padding: 7px 10px;
+  }
+
+  .slip-label {
+    text-align: left;
+    font-size: 9px;
+    line-height: 1.2;
+  }
+
+  .slip-value {
+    text-align: left;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .slip-reminder {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 12px;
+  }
+
+  .slip-reminder-title {
+    font-size: 11px;
+    margin-bottom: 6px;
+  }
+
+  .slip-reminder-list {
+    padding-left: 16px;
+  }
+
+  .slip-reminder-list li {
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  .slip-note {
+    font-size: 10.5px;
+    padding: 8px 9px;
+    border-radius: 11px;
+  }
+
+  .slip-actions {
+    gap: 7px;
+    margin-top: 10px;
+  }
+
+  .slip-actions button {
+    min-height: 40px;
+    font-size: 13.5px;
+    border-radius: 11px;
+  }
+}
+
+/* ================= PRINT FALLBACK ================= */
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    overflow: visible !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  #printableSlip,
+  #printableSlip * {
+    visibility: visible !important;
+  }
+
+  #printableSlip {
+    position: absolute !important;
+    left: 50% !important;
+    top: 0 !important;
+    transform: translateX(-50%) !important;
+    width: 180mm !important;
+    max-width: 180mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .slip-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    border: 1px solid #dbe4ef !important;
+    border-radius: 10px !important;
+    padding: 10mm 9mm 8mm !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+  }
+
+  .slip-actions,
+  .actions,
+  button {
+    display: none !important;
+  }
+
+  .slip-logo {
+    width: 20mm !important;
+    height: 20mm !important;
+  }
+
+  .slip-title {
+    font-size: 18pt !important;
+  }
+
+  .slip-subtitle {
+    font-size: 10pt !important;
+    text-align: center !important;
+  }
+
+  .slip-divider {
+    height: 1px !important;
+    margin: 4mm 0 !important;
+  }
+
+  .slip-qr-wrap {
+    margin: 3mm 0 5mm !important;
+    page-break-inside: avoid !important;
+  }
+
+  .slip-qr-box {
+    padding: 2mm !important;
+    border: 1px solid #dbe5f0 !important;
+    box-shadow: none !important;
+  }
+
+  #qrCanvas {
+    width: 28mm !important;
+    height: 28mm !important;
+  }
+
+  .slip-qr-note {
+    font-size: 8.5pt !important;
+  }
+
+  .slip-details {
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    page-break-inside: avoid !important;
+  }
+
+  .slip-item {
+    grid-template-columns: 44mm 1fr !important;
+    gap: 5mm !important;
+    padding: 3.5mm 4mm !important;
+    background: #ffffff !important;
+  }
+
+  .slip-label {
+    font-size: 8.5pt !important;
+  }
+
+  .slip-value {
+    font-size: 10.5pt !important;
+    text-align: right !important;
+  }
+
+  .slip-reminder {
+    margin-top: 4mm !important;
+    padding: 4mm !important;
+    font-size: 8.5pt !important;
+    background: #fff8e8 !important;
+    border: 1px solid #f2d38a !important;
+  }
+
+  .slip-note {
+    margin-top: 4mm !important;
+    font-size: 8.8pt !important;
+    background: #f7fbff !important;
+  }
+}
+/* ================= FINAL COMPACT PHONE SLIP OVERRIDE ================= */
+
+#slipContent {
+  width: min(100%, 410px) !important;
+  max-width: 410px !important;
+  max-height: 92vh !important;
+  padding: 8px !important;
+  border-radius: 18px !important;
+}
+
+#printableSlip,
+.slip-card {
+  max-width: 372px !important;
+  padding: 12px 10px 10px !important;
+  border-radius: 16px !important;
+}
+
+.slip-header {
+  gap: 8px !important;
+  margin-bottom: 6px !important;
+}
+
+.slip-logo {
+  width: 36px !important;
+  height: 36px !important;
+}
+
+.slip-title {
+  font-size: 14px !important;
+  margin: 0 0 2px !important;
+  line-height: 1.15 !important;
+}
+
+.slip-subtitle {
+  font-size: 9.5px !important;
+  line-height: 1.25 !important;
+}
+
+.slip-divider {
+  margin: 8px 0 10px !important;
+}
+
+.slip-qr-wrap {
+  margin: 0 0 10px !important;
+}
+
+.slip-qr-box {
+  padding: 5px !important;
+  border-radius: 10px !important;
+}
+
+#qrCanvas {
+  width: 88px !important;
+  height: 88px !important;
+}
+
+.slip-qr-note {
+  margin-top: 4px !important;
+  font-size: 9px !important;
+}
+
+.slip-details {
+  border-radius: 12px !important;
+}
+
+.slip-item {
+  grid-template-columns: 98px 1fr !important;
+  gap: 6px !important;
+  padding: 6px 10px !important;
+}
+
+.slip-label {
+  font-size: 8.6px !important;
+  line-height: 1.15 !important;
+  letter-spacing: 0.04em !important;
+}
+
+.slip-value {
+  font-size: 11.5px !important;
+  line-height: 1.3 !important;
+}
+
+.slip-item-address .slip-value {
+  line-height: 1.32 !important;
+}
+
+.slip-reminder.compact {
+  margin-top: 8px !important;
+  padding: 8px 9px !important;
+  border-radius: 11px !important;
+}
+
+.slip-reminder-title {
+  font-size: 10px !important;
+  margin-bottom: 4px !important;
+}
+
+.slip-reminder-text {
+  margin: 0 !important;
+  font-size: 10px !important;
+  line-height: 1.35 !important;
+  text-align: center !important;
+}
+
+.slip-note {
+  margin-top: 7px !important;
+  padding: 7px 8px !important;
+  font-size: 9.8px !important;
+  line-height: 1.3 !important;
+  border-radius: 10px !important;
+}
+
+.slip-actions.compact-actions {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 7px !important;
+  margin-top: 10px !important;
+}
+
+.slip-actions.compact-actions button {
+  min-height: 38px !important;
+  font-size: 13px !important;
+  border-radius: 10px !important;
+  padding: 8px 10px !important;
+}
+
+.slip-actions.compact-actions .close-btn {
+  grid-column: 1 / -1 !important;
+}
+
+@media (max-width: 480px) {
+  #slipContent {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 6px !important;
+  }
+
+  #printableSlip,
+  .slip-card {
+    max-width: 100% !important;
+    padding: 11px 9px 9px !important;
+  }
+
+  .slip-item {
+    grid-template-columns: 1fr !important;
+    gap: 2px !important;
+    padding: 6px 9px !important;
+  }
+
+  .slip-label {
+    font-size: 8.4px !important;
+  }
+
+  .slip-value {
+    text-align: left !important;
+    font-size: 11.3px !important;
+  }
+
+  .slip-actions.compact-actions {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+.slip-subtitle {
+  display: block !important;
+  width: 100% !important;
+  text-align: center !important;
+  margin: 0 auto 2px !important;
+  color: #667085 !important;
+}
+/* ================= FINAL SUBTITLE CENTER FIX ================= */
+
+#slipContent .slip-card {
+  text-align: center !important;
+}
+
+#slipContent .slip-subtitle,
+#printableSlip .slip-subtitle,
+.slip-card .slip-subtitle,
+p.slip-subtitle {
+  display: block !important;
+  width: 100% !important;
+  margin: 0 auto 2px !important;
+  text-align: center !important;
+  color: #667085 !important;
+  font-size: 9.5px !important;
+  line-height: 1.3 !important;
+}
+/* ================= FINAL CONFIRM PROCESSING UI ================= */
+
+.confirm-processing-box {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 14px 15px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #f5f9ff 0%, #eef5ff 100%);
+  border: 1px solid #d7e5f7;
+  color: #334155;
+}
+
+.confirm-processing-box.show {
+  display: flex;
+}
+
+.confirm-processing-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(36, 89, 166, 0.22);
+  border-top: 2px solid #2459a6;
+  border-radius: 50%;
+  animation: confirmSpin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+.confirm-processing-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.confirm-processing-text strong {
+  font-size: 13px;
+  color: #1e3a5f;
+}
+
+.confirm-processing-text span {
+  font-size: 12px;
+  line-height: 1.45;
+  color: #526277;
+}
+
+@keyframes confirmSpin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 480px) {
+  .confirm-processing-box {
+    gap: 10px;
+    padding: 12px 13px;
+    border-radius: 14px;
+  }
+
+  .confirm-processing-spinner {
+    width: 16px;
+    height: 16px;
+  }
+
+  .confirm-processing-text strong {
+    font-size: 12.5px;
+  }
+
+  .confirm-processing-text span {
+    font-size: 11.5px;
+  }
+}
+.slip-reminder.compact {
+  margin-top: 8px !important;
+  padding: 10px 12px !important;
+}
+
+.slip-reminder.compact .slip-reminder-text {
+  margin: 0 !important;
+  text-align: center !important;
+  line-height: 1.45 !important;
+}
+#fullname:disabled,
+#email:disabled,
+#phone:disabled,
+#submitBtn:disabled {
+  opacity: 0.75;
+}
+
+
+
+/* =========================================================
+   PHASE 5 PREMIUM POLISH
+   Government-professional visual refresh for public booking
+   ========================================================= */
+
+:root {
+  --bg: #edf3f9;
+  --card: #ffffff;
+  --card-soft: #f8fbff;
+  --primary: #2158a8;
+  --primary-dark: #173f7e;
+  --primary-soft: #eaf2ff;
+  --primary-border: #bfd3f6;
+  --text: #162033;
+  --text-soft: #44536a;
+  --muted: #66768f;
+  --border: #dbe4ef;
+  --border-strong: #c5d3e4;
+  --success: #138a52;
+  --success-soft: #eaf9f1;
+  --warning: #d18a00;
+  --warning-soft: #fff7e6;
+  --danger: #c63f2f;
+  --danger-soft: #fff1ef;
+  --shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 24px 60px rgba(15, 23, 42, 0.16);
+  --radius: 22px;
+  --radius-sm: 14px;
+}
+
+html, body {
+  min-height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(circle at top left, rgba(36, 89, 166, 0.05), transparent 24%),
+    radial-gradient(circle at top right, rgba(245, 158, 11, 0.05), transparent 18%),
+    linear-gradient(180deg, #f7fafd 0%, #edf3f9 100%);
+  color: var(--text);
+}
+
+.container {
+  max-width: 760px;
+}
+
+.card {
+  border-radius: var(--radius);
+  border: 1px solid rgba(197, 211, 228, 0.88);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(4px);
+}
+
+.header.card {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 20px;
+  padding: 30px 28px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 18px 44px rgba(33, 88, 168, 0.22);
+}
+
+.header.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.08), transparent 34%),
+    linear-gradient(180deg, rgba(255,255,255,0.04), transparent 70%);
+  pointer-events: none;
+}
+
+.logos {
+  position: relative;
+  z-index: 1;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.logo {
+  width: 88px;
+  height: 88px;
+  padding: 6px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.08);
+}
+
+.header h2,
+.header p {
+  position: relative;
+  z-index: 1;
+}
+
+.header h2 {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.header p {
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 520px;
+  margin-inline: auto;
+}
+
+#mainFormCard {
+  position: relative;
+  padding: 28px;
+}
+
+#mainFormCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0));
+  pointer-events: none;
+}
+
+.form-section {
+  position: relative;
+  margin-bottom: 28px;
+  padding: 18px 18px 16px;
+  border: 1px solid #e4ebf3;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+}
+
+.section-title {
+  margin-bottom: 8px;
+  font-size: 19px;
+  color: #16284a;
+}
+
+.helper-text {
+  color: var(--text-soft);
+  font-size: 13px;
+}
+
+input,
+select,
+.card input,
+.card select {
+  height: 52px;
+  border-radius: 14px;
+  border: 1px solid var(--border-strong);
+  background: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+}
+
+input:hover,
+select:hover,
+.card input:hover,
+.card select:hover {
+  border-color: #b5c6db;
+}
+
+input:focus,
+select:focus,
+.card input:focus,
+.card select:focus {
+  border-color: var(--primary);
+  box-shadow:
+    0 0 0 4px rgba(33, 88, 168, 0.10),
+    0 8px 18px rgba(33, 88, 168, 0.08);
+}
+
+label {
+  margin-bottom: 8px;
+  color: #172336;
+  font-size: 13px;
+  letter-spacing: 0.01em;
+}
+
+button {
+  min-height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #2965bc 0%, #2158a8 100%);
+  box-shadow: 0 12px 24px rgba(33, 88, 168, 0.20);
+}
+
+button:hover {
+  background: linear-gradient(180deg, #2158a8 0%, #173f7e 100%);
+  box-shadow: 0 16px 30px rgba(23, 63, 126, 0.24);
+}
+
+.info-banner,
+.summary-box,
+.status-box {
+  border-radius: 16px;
+  border: 1px solid #dbe6f2;
+}
+
+.info-banner {
+  background: linear-gradient(180deg, #f6faff 0%, #edf5ff 100%);
+}
+
+.summary-box {
+  background: linear-gradient(180deg, #fbfdff 0%, #f5f9ff 100%);
+}
+
+.status-box {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+/* Wizard */
+.wizard-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.wizard-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 14px;
+  border: 1px solid #d5deea;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fbfcfe 0%, #f6f8fb 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+  transition: 0.2s ease;
+}
+
+.wizard-step.active {
+  border-color: var(--primary-border);
+  background: linear-gradient(180deg, #f4f8ff 0%, #ecf3ff 100%);
+  box-shadow: 0 0 0 3px rgba(33, 88, 168, 0.08);
+}
+
+.wizard-step.done {
+  border-color: #b8e5cb;
+  background: linear-gradient(180deg, #f3fdf7 0%, #ecfaf1 100%);
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 13px;
+  background: #dce8fb;
+  color: var(--primary-dark);
+  flex: none;
+}
+
+.wizard-step.done .step-number {
+  background: var(--success);
+  color: #fff;
+}
+
+.wizard-step-label {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.wizard-step-label strong {
+  font-size: 13px;
+  color: #14213b;
+}
+
+.wizard-step-label small {
+  font-size: 11px;
+  color: #6c7a91;
+}
+
+.wizard-note {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f3f7ff 0%, #f9fbff 100%);
+  border: 1px solid #d9e5f7;
+}
+
+.wizard-note strong {
+  color: #1d4f91;
+}
+
+.step-section::before {
+  content: attr(data-step-label);
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #194b93;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+/* Service guide */
+.quick-guide {
+  display: none;
+  margin-top: 14px;
+  padding: 16px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fcfdff 0%, #f8fbff 100%);
+  border: 1px solid #dae5f3;
+}
+
+.quick-guide.show {
+  display: block;
+  animation: fadeInUp 0.2s ease;
+}
+
+.quick-guide h4 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  color: #172336;
+}
+
+.quick-guide p {
+  margin: 0 0 8px;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+.quick-points {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+.quick-guide-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.outline-btn,
+.ghost-btn {
+  appearance: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-weight: 700;
+  width: auto;
+  min-height: auto;
+  margin-top: 0;
+  box-shadow: none;
+}
+
+.outline-btn {
+  background: #ffffff;
+  border: 1px solid #2b62b7;
+  color: #2b62b7;
+}
+
+.outline-btn:hover {
+  background: #f7fbff;
+  transform: none;
+  box-shadow: none;
+}
+
+.ghost-btn {
+  background: #eef4ff;
+  color: #1d4f91;
+}
+
+.ghost-btn:hover {
+  background: #e2edff;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Time slots */
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 12px 0 6px;
+}
+
+.time-chip {
+  border: 1px solid #d7e0ea;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+  padding: 14px 14px 13px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  transition: 0.2s ease;
+  box-shadow: 0 6px 16px rgba(16, 24, 40, 0.04);
+}
+
+.time-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(16, 24, 40, 0.08);
+}
+
+.time-chip strong {
+  font-size: 14px;
+  color: #101828;
+}
+
+.time-chip small {
+  font-size: 12px;
+  color: #667085;
+}
+
+.time-chip.available {
+  border-color: #bce5cb;
+  background: linear-gradient(180deg, #fbfffd 0%, #f4fcf7 100%);
+}
+
+.time-chip.full,
+.time-chip.closed {
+  background: linear-gradient(180deg, #f9fafb 0%, #f5f7fa 100%);
+  color: #98a2b3;
+}
+
+.time-chip.full strong,
+.time-chip.closed strong {
+  color: #667085;
+}
+
+.time-chip.selected {
+  border-color: #2b62b7;
+  background: linear-gradient(180deg, #f4f8ff 0%, #ebf2ff 100%);
+  box-shadow: 0 0 0 3px rgba(43, 98, 183, 0.12);
+}
+
+.time-chip.loading {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 80px;
+}
+
+/* Validation */
+.inline-error {
+  display: none;
+  margin-top: 7px;
+  color: #b42318;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.field-error {
+  border-color: #f04438 !important;
+  box-shadow: 0 0 0 3px rgba(240, 68, 56, 0.10) !important;
+}
+
+/* Summary */
+.summary-box.enhanced {
+  border: 1px solid #dae5f3;
+  background: linear-gradient(180deg, #fbfdff 0%, #f6f9ff 100%);
+}
+
+.summary-box.enhanced h4 {
+  margin-bottom: 12px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.summary-item {
+  padding: 12px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #e4ebf3;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+}
+
+.summary-item span {
+  display: block;
+  color: #667085;
+  font-size: 12px;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.summary-item strong {
+  color: #101828;
+  font-size: 14px;
+  word-break: break-word;
+}
+
+.summary-progress {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.summary-pill {
+  padding: 10px 12px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #d8e2ee;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #667085;
+}
+
+.summary-pill.done {
+  background: #edf9f2;
+  border-color: #b7e6c9;
+  color: #067647;
+}
+
+.summary-pill.active {
+  background: #eef4ff;
+  border-color: #bfd3f6;
+  color: #1d4f91;
+}
+
+.submit-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.submit-subtext,
+.soft-note {
+  font-size: 12px;
+  color: #667085;
+  text-align: center;
+}
+
+.service-link {
+  font-size: 12px;
+  color: #2b62b7;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.helper-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Modal polish */
+.modal-content,
+.confirm-card,
+.slip-card {
+  border-radius: 24px !important;
+  border: 1px solid rgba(209, 220, 233, 0.95) !important;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18) !important;
+}
+
+.modal-header {
+  border-bottom: 1px solid #e6edf5;
+}
+
+.modal-content h3,
+.confirm-card h3,
+.slip-title {
+  color: #18325c;
+}
+
+.close {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #f3f6fb;
+}
+
+.close:hover {
+  background: #e7edf6;
+}
+
+/* Subtle animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card,
+.form-section,
+.quick-guide,
+.summary-box.enhanced,
+.info-banner {
+  animation: fadeInUp 0.18s ease;
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+  .container {
+    max-width: 100%;
+  }
+
+  .wizard-steps,
+  .summary-progress,
+  .summary-grid,
+  .time-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wizard-note {
+    align-items: flex-start;
+  }
+
+  #mainFormCard {
+    padding: 22px 18px;
+  }
+
+  .form-section {
+    padding: 16px 14px 14px;
+  }
+}
+
+@media (max-width: 520px) {
+  body {
+    padding: 18px 12px 28px;
+  }
+
+  .header.card {
+    padding: 24px 18px 20px;
+    border-radius: 20px;
+  }
+
+  .logo {
+    width: 72px;
+    height: 72px;
+  }
+
+  .header h2 {
+    font-size: 24px;
+  }
+
+  .header p {
+    font-size: 13px;
+  }
+
+  .card {
+    border-radius: 18px;
+  }
+
+  .two-col {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  input,
+  select,
+  .card input,
+  .card select,
+  button {
+    height: 50px;
+  }
+
+  .outline-btn,
+  .ghost-btn {
+    width: 100%;
+  }
+}
+
+
+
+/* =========================================================
+   PHASE 6 MOBILE CLEANUP + FORMAL LOADING
+   ========================================================= */
+
+/* stronger reset for time cards so they do not inherit main button style */
+button.time-chip,
+button.time-chip:hover,
+button.time-chip:focus,
+button.time-chip:disabled {
+  margin-top: 0;
+  min-height: auto;
+  width: 100%;
+  color: inherit;
+  box-shadow: none;
+  transform: none;
+  letter-spacing: normal;
+}
+
+button.time-chip {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+}
+
+button.time-chip.available {
+  background: linear-gradient(180deg, #fbfffd 0%, #f4fcf7 100%);
+}
+
+button.time-chip.full,
+button.time-chip.closed {
+  background: linear-gradient(180deg, #f9fafb 0%, #f5f7fa 100%);
+}
+
+button.time-chip.selected {
+  background: linear-gradient(180deg, #eef4ff 0%, #e8f0ff 100%);
+}
+
+button.time-chip:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(16, 24, 40, 0.08);
+}
+
+.loading {
+  width: 18px;
+  height: 18px;
+  border-width: 2.5px;
+}
+
+.formal-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(33, 88, 168, 0.16);
+  border-top-color: #2158a8;
+  border-right-color: #2158a8;
+  display: inline-block;
+  animation: spin 0.85s linear infinite;
+  flex: none;
+}
+
+.formal-spinner.dark {
+  border-color: rgba(23, 63, 126, 0.14);
+  border-top-color: #173f7e;
+  border-right-color: #173f7e;
+}
+
+.loading-panel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 82px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fbfdff 0%, #f4f8ff 100%);
+  border: 1px solid #dce6f5;
+}
+
+.loading-panel strong {
+  display: block;
+  color: #18325c;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.loading-panel small {
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.formal-loading-row {
+  gap: 10px;
+}
+
+.selected-date-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #edf5ff 0%, #e7f0ff 100%);
+  border: 1px solid #c9daf7;
+  color: #1b4d95;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.selected-date-badge .badge-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #1b4d95;
+  box-shadow: 0 0 0 3px rgba(27, 77, 149, 0.15);
+  flex: none;
+}
+
+.booking-badge {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #dbe7ff;
+  white-space: nowrap;
+}
+
+.helper-row.compact-helper {
+  justify-content: flex-start;
+}
+
+.summary-box.enhanced h4 {
+  margin-bottom: 10px;
+}
+
+.summary-progress {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.summary-pill {
+  padding: 9px 10px;
+}
+
+.submit-wrap button {
+  margin-top: 0;
+}
+
+/* clearer selected day in the calendar */
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+  background: #2158a8 !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow:
+    0 0 0 3px rgba(33, 88, 168, 0.15),
+    0 10px 20px rgba(33, 88, 168, 0.28) !important;
+}
+
+.flatpickr-day.selected::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 1.5px solid rgba(255,255,255,0.72);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.flatpickr-day.selected .slot-dot {
+  background: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.16) !important;
+}
+
+.flatpickr-day.today:not(.selected) {
+  border-color: rgba(33, 88, 168, 0.72);
+}
+
+@media (max-width: 700px) {
+  body {
+    padding: 14px 10px 24px;
+  }
+
+  .container {
+    max-width: 100%;
+  }
+
+  .header.card {
+    margin-bottom: 14px;
+    padding: 20px 16px 18px;
+    border-radius: 18px;
+  }
+
+  .logos {
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .logo {
+    width: 68px;
+    height: 68px;
+    padding: 4px;
+  }
+
+  .header h2 {
+    font-size: 21px;
+    margin-bottom: 4px;
+  }
+
+  .header p {
+    font-size: 12.5px;
+    line-height: 1.4;
+    max-width: 270px;
+  }
+
+  #mainFormCard {
+    padding: 16px 14px 18px;
+    border-radius: 18px;
+  }
+
+  .wizard-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .wizard-step {
+    padding: 10px 10px;
+    border-radius: 14px;
+    gap: 8px;
+  }
+
+  .step-number {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .wizard-step-label strong {
+    font-size: 12px;
+  }
+
+  .wizard-step-label small {
+    display: none;
+  }
+
+  .wizard-note {
+    padding: 10px 12px;
+    margin-bottom: 14px;
+    border-radius: 14px;
+  }
+
+  .wizard-note strong {
+    font-size: 13px;
+  }
+
+  .wizard-note .soft-note {
+    font-size: 11px;
+  }
+
+  .booking-badge {
+    white-space: normal;
+    text-align: center;
+    font-size: 11px;
+  }
+
+  .form-section {
+    margin-bottom: 18px;
+    padding: 14px 12px 12px;
+    border-radius: 16px;
+  }
+
+  .form-section::before {
+    margin-bottom: 8px;
+    font-size: 11px;
+  }
+
+  .section-title {
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+
+  label {
+    font-size: 13px;
+    margin-bottom: 7px;
+  }
+
+  input,
+  select,
+  .card input,
+  .card select {
+    height: 48px;
+    font-size: 14px;
+    padding: 0 13px;
+    border-radius: 14px;
+  }
+
+  .two-col {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .info-banner {
+    margin-top: 12px;
+    padding: 11px 12px;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .quick-guide {
+    margin-top: 12px;
+    padding: 12px 12px 13px;
+    border-radius: 14px;
+  }
+
+  .quick-guide h4 {
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+
+  .quick-guide p,
+  .quick-points {
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .quick-points li + li {
+    margin-top: 4px;
+  }
+
+  .quick-guide-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .outline-btn,
+  .ghost-btn {
+    width: 100%;
+    padding: 11px 12px;
+    border-radius: 12px;
+  }
+
+  .calendar-legend {
+    gap: 12px;
+    font-size: 11px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .service-info {
+    margin-top: 8px;
+  }
+
+  .soft-note.schedule-tip {
+    display: none;
+  }
+
+  .time-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .time-chip {
+    border-radius: 14px;
+    padding: 13px 14px;
+  }
+
+  .time-chip strong {
+    font-size: 14px;
+  }
+
+  .time-chip small {
+    font-size: 12px;
+  }
+
+  .helper-row.compact-helper {
+    margin-top: 8px;
+  }
+
+  .helper-row.compact-helper .helper-text {
+    font-size: 12px;
+    margin-top: 2px;
+  }
+
+  .summary-box.enhanced {
+    padding: 14px 12px;
+    border-radius: 16px;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .summary-item {
+    padding: 10px 11px;
+    border-radius: 12px;
+  }
+
+  .summary-item span {
+    font-size: 11px;
+    margin-bottom: 3px;
+  }
+
+  .summary-item strong {
+    font-size: 14px;
+  }
+
+  .summary-progress {
+    gap: 8px;
+    margin: 10px 0 12px;
+  }
+
+  .summary-pill {
+    font-size: 11px;
+    padding: 8px 8px;
+  }
+
+  .submit-subtext {
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  button {
+    min-height: 48px;
+    border-radius: 14px;
+    font-size: 15px;
+  }
+
+  .modal-content,
+  .confirm-card,
+  .slip-card {
+    width: calc(100vw - 22px) !important;
+    max-width: none !important;
+    margin: 12px auto !important;
+    padding: 16px 14px !important;
+    border-radius: 18px !important;
+  }
+
+  .modal-content p,
+  .modal-content li,
+  .confirm-card p {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+}
+
+@media (max-width: 420px) {
+  .header h2 {
+    font-size: 19px;
+  }
+
+  .header p {
+    max-width: 240px;
+  }
+
+  .wizard-step {
+    padding: 9px;
+  }
+
+  .step-number {
+    width: 26px;
+    height: 26px;
+  }
+
+  .wizard-step-label strong {
+    font-size: 11.5px;
+  }
+
+  .selected-date-badge {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .summary-progress {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-badge {
+    width: 100%;
+  }
+}
+
+
+
+/* =========================================================
+   PHASE 7 TYPOGRAPHY POLISH + OFFICIAL FOOTER
+   ========================================================= */
+
+.summary-box.enhanced {
+  padding: 18px 18px 16px;
+}
+
+.summary-box.enhanced h4 {
+  font-size: 18px;
+  color: #17325c;
+  margin: 0 0 14px;
+  letter-spacing: 0.01em;
+}
+
+.summary-grid {
+  gap: 12px;
+}
+
+.summary-item {
+  background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+}
+
+.summary-item span {
+  font-size: 11.5px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #6b7b92;
+}
+
+.summary-item strong {
+  font-size: 15px;
+  line-height: 1.35;
+  color: #14213b;
+}
+
+.summary-progress {
+  margin: 16px 0 14px;
+}
+
+.summary-pill {
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+}
+
+.submit-wrap {
+  margin-top: 4px;
+}
+
+.submit-wrap button {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.submit-subtext {
+  color: #667085;
+  max-width: 420px;
+  margin: 0 auto;
+  line-height: 1.45;
+}
+
+.confirm-card p,
+.confirm-card li,
+.slip-card p,
+.slip-card li,
+.modal-content p,
+.modal-content li {
+  color: #344054;
+  line-height: 1.62;
+}
+
+.confirm-card h3,
+.slip-title,
+.modal-content h3 {
+  letter-spacing: 0.01em;
+}
+
+.confirm-card .confirm-message,
+.slip-card .slip-subtitle {
+  color: #667085;
+}
+
+.confirm-status {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f6f9ff 0%, #eef4ff 100%);
+  border: 1px solid #dbe7fb;
+}
+
+.confirm-status span:last-child {
+  color: #17325c;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.official-footer {
+  margin: 18px auto 0;
+  max-width: 760px;
+}
+
+.official-footer-inner {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid #d9e4f2;
+  background: linear-gradient(180deg, #f9fbff 0%, #f3f7fd 100%);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.official-footer-brand,
+.official-footer-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.official-footer-brand strong {
+  font-size: 13px;
+  color: #18325c;
+  letter-spacing: 0.02em;
+}
+
+.official-footer-brand span,
+.official-footer-meta span {
+  font-size: 12px;
+  color: #667085;
+  line-height: 1.4;
+}
+
+.official-footer-meta {
+  text-align: right;
+}
+
+@media (max-width: 700px) {
+  .summary-box.enhanced {
+    padding: 14px 12px;
+  }
+
+  .summary-box.enhanced h4 {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .summary-item strong {
+    font-size: 14px;
+  }
+
+  .submit-wrap button {
+    font-size: 15px;
+  }
+
+  .official-footer {
+    margin-top: 14px;
+  }
+
+  .official-footer-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 13px 14px;
+    border-radius: 16px;
+  }
+
+  .official-footer-brand strong {
+    font-size: 12.5px;
+  }
+
+  .official-footer-brand span,
+  .official-footer-meta span {
+    font-size: 11.5px;
+  }
+
+  .official-footer-meta {
+    text-align: left;
+  }
+}
+
+
+/* Phase 11 smooth month switch */
+.flatpickr-calendar.calendar-loading {
+  opacity: 0.92;
+}
+
+.flatpickr-calendar.calendar-loading .flatpickr-days {
+  transition: opacity 0.18s ease;
+}
+
+.flatpickr-calendar.calendar-loading::after {
+  content: "Loading calendar...";
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  z-index: 30;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #dbe4ef;
+  color: #2459a6;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+/* Small centered footer like the sample */
+.mini-official-footer {
+  margin: 12px auto 6px;
+  padding: 0 8px;
+}
+
+.mini-official-footer-inner {
+  text-align: center;
+  color: #667085;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.mini-official-footer-inner div + div {
+  margin-top: 2px;
+}
+
+@media (max-width: 700px) {
+  .mini-official-footer {
+    margin: 10px auto 4px;
+  }
+
+  .mini-official-footer-inner {
+    font-size: 10.5px;
+    line-height: 1.4;
+  }
+
+  .flatpickr-calendar.calendar-loading::after {
+    top: 10px;
+    right: 10px;
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+}
