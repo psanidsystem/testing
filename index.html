@@ -142,7 +142,7 @@
       </div>
 
       <div class="summary-box enhanced step-section" data-step="4" data-step-label="Step 4 · Review">
-        <h4>Review Appointment</h4>
+        <h4>Appointment Summary</h4>
 
         <div class="summary-grid">
           <div class="summary-item">
@@ -171,7 +171,7 @@
             <span id="btnText">Submit Appointment Request</span>
             <span id="btnLoader" class="loading" style="display:none;"></span>
           </button>
-          <div class="submit-subtext">Review details before submitting.</div>
+          <div class="submit-subtext">Please review the details before submitting.</div>
         </div>
       </div>
     </div>
@@ -1011,44 +1011,70 @@ async function prefetchTimeSlotsForDate() {
   }
 
   const requestId = ++activeTimeGridRequestId;
+  const dateCacheKey = `${service}_${date}`;
+
   setTimeInputDisabled(true);
   renderTimeGrid([], true);
   setAvailabilityInfo("Loading available time slots...", "#475467");
 
-  const results = await Promise.all(TIME_OPTIONS.map(async rawTime => {
-    const cacheKey = `${service}_${date}_${rawTime}`;
-    if (dailySlotCache[cacheKey]) {
-      return { time: rawTime, ...dailySlotCache[cacheKey] };
-    }
+  try {
+    let results = dateSlotCache[dateCacheKey];
 
-    try {
+    if (!results) {
       const res = await postJson({
-        action: "slots",
+        action: "slotsForDate",
         date,
-        service,
-        time: rawTime
+        service
       });
       const data = await res.json();
-      dailySlotCache[cacheKey] = data;
-      return { time: rawTime, ...data };
-    } catch (err) {
-      return { time: rawTime, status: "error", open: false, reason: "Unable to load slot" };
+
+      if (data.status !== "success" || !Array.isArray(data.items)) {
+        throw new Error(data.message || "Unable to load slot availability.");
+      }
+
+      results = data.items.map(item => ({
+        time: item.time,
+        open: item.open,
+        reason: item.reason || "",
+        remaining: Number(item.remaining ?? 0),
+        max: Number(item.max ?? 0)
+      }));
+
+      dateSlotCache[dateCacheKey] = results;
+
+      results.forEach(item => {
+        const timeCacheKey = `${service}_${date}_${item.time}`;
+        dailySlotCache[timeCacheKey] = {
+          open: item.open,
+          reason: item.reason || "",
+          remaining: Number(item.remaining ?? 0),
+          max: Number(item.max ?? 0)
+        };
+      });
     }
-  }));
 
-  if (requestId !== activeTimeGridRequestId) return;
+    if (requestId !== activeTimeGridRequestId) return;
 
-  populateTimeSelect(results);
-  renderTimeGrid(results);
-  setTimeInputDisabled(false);
+    populateTimeSelect(results);
+    renderTimeGrid(results);
+    setTimeInputDisabled(false);
 
-  if (document.getElementById("time").value) {
-    checkSlots();
-  } else {
-    setAvailabilityInfo("Select a time to continue.", "#475467");
+    if (document.getElementById("time").value) {
+      checkSlots();
+    } else {
+      setAvailabilityInfo("Select a time to continue.", "#475467");
+    }
+
+    updateStepState();
+  } catch (err) {
+    if (requestId !== activeTimeGridRequestId) return;
+    console.error("prefetchTimeSlotsForDate error:", err);
+    renderTimeGrid([]);
+    populateTimeSelect([]);
+    setTimeInputDisabled(true);
+    setAvailabilityInfo("Unable to load available time slots. Please try again.", "#b42318");
+    updateStepState();
   }
-
-  updateStepState();
 }
 
 function selectTimeSlot(timeValue) {
@@ -1416,25 +1442,41 @@ function checkSlots() {
   setApplicantFieldsDisabled(true);
 
   if (!service) {
-    setAvailabilityInfo("Select a service first to load available dates.");
+    setAvailabilityInfo("Select a service to continue.");
     return;
   }
 
   if (!date) {
-    setAvailabilityInfo("Select a preferred date first.");
+    setAvailabilityInfo("Select a date first.");
     return;
   }
 
   if (!time) {
-    setAvailabilityInfo("Select a preferred time to check available slot.");
+    setAvailabilityInfo("Select a time to continue.");
     return;
   }
 
   const cacheKey = `${service}_${date}_${time}`;
+  const dateCacheKey = `${service}_${date}`;
 
   if (dailySlotCache[cacheKey]) {
     applySlotAvailabilityResult(dailySlotCache[cacheKey]);
     return;
+  }
+
+  if (dateSlotCache[dateCacheKey]) {
+    const found = dateSlotCache[dateCacheKey].find(item => item.time === time);
+    if (found) {
+      const normalized = {
+        open: found.open,
+        reason: found.reason || "",
+        remaining: Number(found.remaining ?? 0),
+        max: Number(found.max ?? 0)
+      };
+      dailySlotCache[cacheKey] = normalized;
+      applySlotAvailabilityResult(normalized);
+      return;
+    }
   }
 
   setAvailabilityInfo("Checking slot availability...", "#475467");
@@ -1716,7 +1758,21 @@ window.printSlip = function() {
 </head>
       <body>
         <div id="printArea">${slipHtml}</div>
-      </body>
+      
+  <footer class="official-footer">
+    <div class="official-footer-inner">
+      <div class="official-footer-brand">
+        <strong>Philippine Statistics Authority</strong>
+        <span>National ID Appointment Request</span>
+      </div>
+      <div class="official-footer-meta">
+        <span>PSA Cebu Fixed Registration Center</span>
+        <span>For official scheduling use only</span>
+      </div>
+    </div>
+  </footer>
+
+</body>
     </html>
   `);
   printWindow.document.close();
