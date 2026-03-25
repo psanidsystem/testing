@@ -83,6 +83,7 @@
             <label for="date">Preferred Date <span class="req">*</span></label>
             <input type="text" id="date" placeholder="Choose preferred appointment date" readonly>
             <div id="selectedDateBadge" class="selected-date-badge" style="display:none;"></div>
+            <div class="calendar-note">Only available dates can be selected.</div>
           </div>
 
           <div>
@@ -100,19 +101,12 @@
             </select>
           </div>
         </div>
-
-        <div class="calendar-legend">
-          <span><i class="dot dot-available"></i> Available</span>
-          <span><i class="dot dot-full"></i> Full</span>
-          <span><i class="dot dot-closed"></i> Closed</span>
-        </div>
-
-        <div class="service-info">
+<div class="service-info">
           <small id="serviceInfoText"></small>
         </div>
 
         <div class="time-grid" id="timeGrid"></div>
-        <p class="soft-note schedule-tip">Tap an available time card to select it.</p>
+        <p class="soft-note schedule-tip">Select an available time below.</p>
       </div>
 
       <div class="form-section step-section" data-step="3" data-step-label="Step 3 · Applicant Details">
@@ -2150,7 +2144,7 @@ document.addEventListener("DOMContentLoaded", function() {
       today.setHours(0, 0, 0, 0);
 
       if (dayElem.dateObj < today) {
-        dayElem.classList.add("flatpickr-disabled");
+        dayElem.classList.add("flatpickr-disabled", "calendar-day-unavailable");
         dayElem.style.pointerEvents = "none";
         return;
       }
@@ -2165,43 +2159,30 @@ document.addEventListener("DOMContentLoaded", function() {
       const isSaturday = dayOfWeek === 6;
       const isSunday = dayOfWeek === 0;
 
-      const oldDot = dayElem.querySelector(".slot-dot");
-      if (oldDot) oldDot.remove();
-
-      dayElem.classList.remove("has-tooltip", "flatpickr-disabled", "calendar-closed-day", "calendar-full-day");
+      dayElem.classList.remove(
+        "has-tooltip",
+        "flatpickr-disabled",
+        "calendar-day-unavailable",
+        "calendar-day-available"
+      );
       dayElem.removeAttribute("data-tooltip");
       dayElem.style.pointerEvents = "";
 
       if (bookingWindowEndDate && date > bookingWindowEndDate) {
-        dayElem.classList.add("flatpickr-disabled", "calendar-closed-day", "has-tooltip");
+        dayElem.classList.add("flatpickr-disabled", "calendar-day-unavailable");
         dayElem.style.pointerEvents = "none";
-        dayElem.setAttribute("data-tooltip", "Outside booking window");
-
-        const dot = document.createElement("span");
-        dot.className = "slot-dot closed";
-        dayElem.appendChild(dot);
         return;
       }
 
       if (isSaturday && !systemSettings.saturdayOpen) {
-        dayElem.classList.add("flatpickr-disabled", "calendar-closed-day", "has-tooltip");
+        dayElem.classList.add("flatpickr-disabled", "calendar-day-unavailable");
         dayElem.style.pointerEvents = "none";
-        dayElem.setAttribute("data-tooltip", "Saturday closed");
-
-        const dot = document.createElement("span");
-        dot.className = "slot-dot closed";
-        dayElem.appendChild(dot);
         return;
       }
 
       if (isSunday && !systemSettings.sundayOpen) {
-        dayElem.classList.add("flatpickr-disabled", "calendar-closed-day", "has-tooltip");
+        dayElem.classList.add("flatpickr-disabled", "calendar-day-unavailable");
         dayElem.style.pointerEvents = "none";
-        dayElem.setAttribute("data-tooltip", "Sunday closed");
-
-        const dot = document.createElement("span");
-        dot.className = "slot-dot closed";
-        dayElem.appendChild(dot);
         return;
       }
 
@@ -2212,45 +2193,22 @@ document.addEventListener("DOMContentLoaded", function() {
       let booked = 0;
       let max = DEFAULT_SLOTS[service] || 0;
       let open = true;
-      let reason = "";
 
       if (dayData) {
         booked = Number(dayData.booked || 0);
         max = Number(dayData.max || 0);
         open = dayData.open !== false;
-        reason = dayData.reason || "";
       }
 
       const remaining = max - booked;
 
-      if (!open || max <= 0) {
-        dayElem.classList.add("flatpickr-disabled", "calendar-closed-day", "has-tooltip");
+      if (!open || max <= 0 || remaining <= 0) {
+        dayElem.classList.add("flatpickr-disabled", "calendar-day-unavailable");
         dayElem.style.pointerEvents = "none";
-        dayElem.setAttribute("data-tooltip", reason || "Booking closed");
-
-        const dot = document.createElement("span");
-        dot.className = "slot-dot closed";
-        dayElem.appendChild(dot);
         return;
       }
 
-      if (remaining <= 0) {
-        dayElem.classList.add("flatpickr-disabled", "calendar-full-day", "has-tooltip");
-        dayElem.style.pointerEvents = "none";
-        dayElem.setAttribute("data-tooltip", "Fully booked");
-
-        const dot = document.createElement("span");
-        dot.className = "slot-dot full";
-        dayElem.appendChild(dot);
-        return;
-      }
-
-      const dot = document.createElement("span");
-      dot.classList.add("slot-dot", "many");
-      dayElem.appendChild(dot);
-
-      dayElem.classList.add("has-tooltip");
-      dayElem.setAttribute("data-tooltip", `${remaining} slots left`);
+      dayElem.classList.add("calendar-day-available");
     },
 
     onChange: function(selectedDates, dateStr, instance) {
