@@ -1493,10 +1493,11 @@
   </div>
 
   <script>
-const EXEC_URL = "https://script.google.com/macros/s/AKfycbwZMzOdLHWiFFQ4Lng4h368mQD-boJrKpBT-zDry9qfrulPPLhKEskL6z7h4ypJOMlp8g/exec";
+const EXEC_URL = "REPLACE_WITH_YOUR_WEB_APP_EXEC_URL";
 
 let username = sessionStorage.getItem("nid_username") || "";
-let password = sessionStorage.getItem("nid_password") || "";
+let sessionToken = sessionStorage.getItem("nid_session_token") || "";
+let sessionExpiresAt = Number(sessionStorage.getItem("nid_session_expires") || 0);
 let userRole = sessionStorage.getItem("nid_role") || "";
 let displayName = sessionStorage.getItem("nid_name") || "";
 
@@ -1537,11 +1538,26 @@ const sectionMap = {
   settings: ["settingsSection", "System Settings"]
 };
 
+function clearStoredSession() {
+  sessionStorage.removeItem("nid_session_token");
+  sessionStorage.removeItem("nid_session_expires");
+  sessionStorage.removeItem("nid_username");
+  sessionStorage.removeItem("nid_role");
+  sessionStorage.removeItem("nid_name");
+}
+
 function requireLogin() {
-  if (!username || !password || !userRole) {
+  if (!username || !sessionToken || !userRole || !sessionExpiresAt) {
     window.location.href = "login.html";
     return false;
   }
+
+  if (Date.now() >= sessionExpiresAt) {
+    clearStoredSession();
+    window.location.href = "login.html";
+    return false;
+  }
+
   return true;
 }
 
@@ -2068,11 +2084,39 @@ function resetUserForm() {
 }
 
 
+function isAuthErrorResponse(data) {
+  const message = String(data?.message || "");
+  return data?.status === "error" && /unauthorized|session expired|session invalid/i.test(message);
+}
+
+async function forceLogout(redirectMessage) {
+  try {
+    if (sessionToken) {
+      await fetch(EXEC_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "logout",
+          sessionToken
+        })
+      });
+    }
+  } catch (err) {
+    // Ignore logout network errors
+  }
+
+  clearStoredSession();
+
+  if (redirectMessage) {
+    sessionStorage.setItem("nid_logout_notice", redirectMessage);
+  }
+
+  window.location.href = "login.html";
+}
+
 async function apiRequest(payload) {
   const finalPayload = {
     ...payload,
-    authUsername: username,
-    authPassword: password
+    sessionToken
   };
 
   const res = await fetch(EXEC_URL, {
@@ -2080,7 +2124,14 @@ async function apiRequest(payload) {
     body: JSON.stringify(finalPayload)
   });
 
-  return res.json();
+  const data = await res.json();
+
+  if (isAuthErrorResponse(data)) {
+    await forceLogout("Your session has expired. Please log in again.");
+    throw new Error(data.message || "Your session has expired. Please log in again.");
+  }
+
+  return data;
 }
 
 function defaultWeekendSettings() {
@@ -2460,11 +2511,7 @@ async function saveUser() {
 
 
 function logout() {
-  sessionStorage.removeItem("nid_username");
-  sessionStorage.removeItem("nid_password");
-  sessionStorage.removeItem("nid_role");
-  sessionStorage.removeItem("nid_name");
-  window.location.href = "login.html";
+  forceLogout("");
 }
 
 
@@ -2637,6 +2684,29 @@ window.deleteUser = async function(usernameToDelete) {
   }
 };
 
+async function validateSessionOnLoad() {
+  const result = await apiRequest({
+    action: "validateSession"
+  });
+
+  if (result.status !== "success") {
+    throw new Error(result.message || "Session expired or invalid.");
+  }
+
+  username = result.username || username;
+  userRole = result.role || userRole;
+  displayName = result.name || displayName;
+  sessionStorage.setItem("nid_username", username);
+  sessionStorage.setItem("nid_role", userRole);
+  sessionStorage.setItem("nid_name", displayName);
+  if (result.sessionExpiresAt) {
+    sessionExpiresAt = Number(result.sessionExpiresAt);
+    sessionStorage.setItem("nid_session_expires", String(sessionExpiresAt));
+  }
+
+  return result;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
 
   if (!requireLogin()) return;
@@ -2664,14 +2734,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   fillServiceOptions();
   renderAll();
-  loadAdminData({ silent: false });
+
+  validateSessionOnLoad()
+    .then(() => loadAdminData({ silent: false }))
+    .catch(() => {
+      // forceLogout already redirects on auth error
+    });
 
   document.querySelectorAll(".nav-btn").forEach(btn => {
     btn.addEventListener("click", () => switchSection(btn.dataset.section));
   });
 
   document.getElementById("dashboardDate")?.addEventListener("change", renderMetrics);
-  document.getElementById("refreshBtn")?.addEventListener("click", () => loadAdminData({ silent: false }));
+  document.getElementById("refreshBtn")?.addEventListener("click", () => {
+    if (!requireLogin()) return;
+    loadAdminData({ silent: false });
+  });
 
   document.getElementById("openNewBookingBtn")?.addEventListener("click", () => {
     resetBookingForm();
