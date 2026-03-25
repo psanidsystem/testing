@@ -20,39 +20,38 @@
         <img class="logo" src="logo-partner.png" alt="National ID Logo">
       </div>
       <h2>National ID System</h2>
-      <p>Appointment Request<br>Philippine Statistics Authority - Fixed Registration Center - Cebu</p>
+      <p>Appointment Request<br>PSA Cebu Fixed Registration Center</p>
     </div>
 
     <div class="card" id="mainFormCard">
       <div class="wizard-steps" id="wizardSteps">
         <div class="wizard-step active" data-step="1">
           <div class="step-number">1</div>
-          <div class="wizard-step-label"><strong>Service</strong><small>Select request type</small></div>
+          <div class="wizard-step-label"><strong>Service</strong><small>Choose service</small></div>
         </div>
         <div class="wizard-step" data-step="2">
           <div class="step-number">2</div>
-          <div class="wizard-step-label"><strong>Schedule</strong><small>Choose date and time</small></div>
+          <div class="wizard-step-label"><strong>Schedule</strong><small>Date and time</small></div>
         </div>
         <div class="wizard-step" data-step="3">
           <div class="step-number">3</div>
-          <div class="wizard-step-label"><strong>Details</strong><small>Enter applicant info</small></div>
+          <div class="wizard-step-label"><strong>Details</strong><small>Applicant details</small></div>
         </div>
         <div class="wizard-step" data-step="4">
           <div class="step-number">4</div>
-          <div class="wizard-step-label"><strong>Confirm</strong><small>Review before submit</small></div>
+          <div class="wizard-step-label"><strong>Confirm</strong><small>Review</small></div>
         </div>
       </div>
 
       <div class="wizard-note">
         <div>
-          <strong>Improved appointment flow</strong><br>
-          <span class="soft-note">Select a service first to load the correct requirements and available dates.</span>
+          <strong>Appointment Schedule</strong>
         </div>
-        <span class="soft-note" id="bookingWindowBadge">Booking window loading...</span>
+        <span class="soft-note booking-badge" id="bookingWindowBadge">Loading booking window...</span>
       </div>
 
       <div class="form-section step-section" data-step="1" data-step-label="Step 1 · Service">
-        <h3 class="section-title">Service Information</h3>
+        <h3 class="section-title">Select Service</h3>
 
         <label for="service">Select Service <span class="req">*</span></label>
         <select id="service" required>
@@ -66,23 +65,24 @@
         <div class="info-banner" id="weekendNotice"></div>
 
         <div class="quick-guide" id="serviceGuideBox">
-          <h4 id="serviceGuideTitle">Service requirements preview</h4>
-          <p id="serviceGuideText">Select a service to view the applicable reminder and requirements.</p>
+          <h4 id="serviceGuideTitle">Service reminder</h4>
+          <p id="serviceGuideText">Check the basic requirements for the selected service.</p>
           <ul class="quick-points" id="serviceGuideList"></ul>
           <div class="quick-guide-actions">
-            <button type="button" class="outline-btn" id="serviceGuideBtn" onclick="openSelectedServiceGuide()">View Full Requirements</button>
-            <button type="button" class="ghost-btn" onclick="scrollToStep(2)">Proceed to Schedule</button>
+            <button type="button" class="outline-btn" id="serviceGuideBtn" onclick="openSelectedServiceGuide()">Requirements</button>
+            <button type="button" class="ghost-btn" onclick="scrollToStep(2)">Next</button>
           </div>
         </div>
       </div>
 
       <div class="form-section step-section" data-step="2" data-step-label="Step 2 · Schedule">
-        <h3 class="section-title">Appointment Schedule</h3>
+        <h3 class="section-title">Schedule</h3>
 
         <div class="two-col">
           <div>
             <label for="date">Preferred Date <span class="req">*</span></label>
             <input type="text" id="date" placeholder="Choose preferred appointment date" readonly>
+            <div id="selectedDateBadge" class="selected-date-badge" style="display:none;"></div>
           </div>
 
           <div>
@@ -112,7 +112,7 @@
         </div>
 
         <div class="time-grid" id="timeGrid"></div>
-        <p class="soft-note">Tip: available time cards will show remaining slots and can be tapped directly.</p>
+        <p class="soft-note schedule-tip">Tap an available time card to select it.</p>
       </div>
 
       <div class="form-section step-section" data-step="3" data-step-label="Step 3 · Applicant Details">
@@ -136,26 +136,25 @@
           </div>
         </div>
 
-        <div class="helper-row">
-          <p class="helper-text">Provide at least one contact detail.</p>
-          <span class="soft-note">Email is recommended for confirmation notices.</span>
+        <div class="helper-row compact-helper">
+          <p class="helper-text">Enter at least one contact detail.</p>
         </div>
       </div>
 
       <div class="summary-box enhanced step-section" data-step="4" data-step-label="Step 4 · Review">
-        <h4>Appointment Summary</h4>
+        <h4>Review Appointment</h4>
 
         <div class="summary-grid">
           <div class="summary-item">
-            <span>Selected Service</span>
+            <span>Service</span>
             <strong id="summaryService">Not selected</strong>
           </div>
           <div class="summary-item">
-            <span>Preferred Date</span>
+            <span>Date</span>
             <strong id="summaryDate">Not selected</strong>
           </div>
           <div class="summary-item">
-            <span>Preferred Time</span>
+            <span>Time</span>
             <strong id="summaryTime">Not selected</strong>
           </div>
         </div>
@@ -172,7 +171,7 @@
             <span id="btnText">Submit Appointment Request</span>
             <span id="btnLoader" class="loading" style="display:none;"></span>
           </button>
-          <div class="submit-subtext">Review your details carefully before confirming the appointment request.</div>
+          <div class="submit-subtext">Review details before submitting.</div>
         </div>
       </div>
     </div>
@@ -706,7 +705,7 @@ function agreePrivacy() {
   setDateInputDisabled(true);
   setTimeInputDisabled(true);
   setApplicantFieldsDisabled(true);
-  setAvailabilityInfo("Select a service first to load available dates.");
+  setAvailabilityInfo("Select a service to continue.");
   updateSummary();
 }
 
@@ -737,7 +736,23 @@ function updateBookingWindowBadge() {
   if (!badge) return;
   badge.textContent = bookingWindowEndDate
     ? `Booking until ${formatPrettyDate(bookingWindowEndDate)}`
-    : "Booking window loading...";
+    : "Loading booking window...";
+}
+
+function updateSelectedDateBadge() {
+  const badge = document.getElementById("selectedDateBadge");
+  const rawDate = document.getElementById("date")?.value || "";
+
+  if (!badge) return;
+
+  if (!rawDate) {
+    badge.style.display = "none";
+    badge.innerHTML = "";
+    return;
+  }
+
+  badge.style.display = "inline-flex";
+  badge.innerHTML = `<span class="badge-dot"></span><span>Selected: ${formatPrettyDate(rawDate)}</span>`;
 }
 
 function getServiceGuide(service) {
@@ -912,7 +927,15 @@ function renderTimeGrid(items = [], loading = false) {
   if (!grid) return;
 
   if (loading) {
-    grid.innerHTML = `<button type="button" class="time-chip loading" disabled><strong>Loading time slots...</strong><small>Please wait</small></button>`;
+    grid.innerHTML = `
+      <div class="loading-panel" aria-live="polite">
+        <span class="formal-spinner dark"></span>
+        <div>
+          <strong>Loading available time slots</strong>
+          <small>Please wait while the schedule is being prepared.</small>
+        </div>
+      </div>
+    `;
     return;
   }
 
@@ -990,7 +1013,7 @@ async function prefetchTimeSlotsForDate() {
   const requestId = ++activeTimeGridRequestId;
   setTimeInputDisabled(true);
   renderTimeGrid([], true);
-  setAvailabilityInfo("⏳ Loading time slots for the selected date...", "#555");
+  setAvailabilityInfo("Loading available time slots...", "#475467");
 
   const results = await Promise.all(TIME_OPTIONS.map(async rawTime => {
     const cacheKey = `${service}_${date}_${rawTime}`;
@@ -1022,7 +1045,7 @@ async function prefetchTimeSlotsForDate() {
   if (document.getElementById("time").value) {
     checkSlots();
   } else {
-    setAvailabilityInfo("Select a preferred time to continue.", "#555");
+    setAvailabilityInfo("Select a time to continue.", "#475467");
   }
 
   updateStepState();
@@ -1088,6 +1111,7 @@ function updateSummary() {
 
   updateServiceGuide();
   updateBookingWindowBadge();
+  updateSelectedDateBadge();
   updateStepState();
 }
 
@@ -1114,7 +1138,7 @@ function drawSlipQR(text) {
   });
 }
 
-function setConfirmLoading(isLoading, message = "Processing appointment...") {
+function setConfirmLoading(isLoading, message = "Processing appointment request...") {
   const primaryBtn = document.querySelector(".confirm-primary");
   const secondaryBtn = document.querySelector(".confirm-secondary");
   const statusBox = document.getElementById("confirmStatus");
@@ -1126,11 +1150,12 @@ function setConfirmLoading(isLoading, message = "Processing appointment...") {
 
   if (statusBox) {
     statusBox.style.display = isLoading ? "flex" : "none";
+    statusBox.classList.toggle("formal-loading-row", !!isLoading);
   }
 
   if (primaryBtn) {
     primaryBtn.disabled = isLoading;
-    primaryBtn.textContent = isLoading ? "Processing Appointment..." : "Confirm Appointment";
+    primaryBtn.textContent = isLoading ? "Processing..." : "Confirm Appointment";
   }
 
   if (secondaryBtn) {
@@ -1139,7 +1164,7 @@ function setConfirmLoading(isLoading, message = "Processing appointment...") {
 }
 
 function resetConfirmButtons() {
-  setConfirmLoading(false, "Processing appointment...");
+  setConfirmLoading(false, "Processing appointment request...");
 }
 
 function resetSlotInfo() {
@@ -1179,20 +1204,20 @@ function renderSlotInfo(data, info) {
   if (!info) return;
 
   if (data.status === "error") {
-    info.innerHTML = "⚠ " + (data.message || "Unable to check availability.");
-    info.style.color = "red";
+    info.innerHTML = (data.message || "Unable to check availability.");
+    info.style.color = "#b42318";
     return;
   }
 
   if (data.open === false) {
-    info.innerHTML = `🔒 Booking closed${data.reason ? " — " + data.reason : ""}`;
-    info.style.color = "red";
+    info.innerHTML = `Schedule closed${data.reason ? " — " + data.reason : ""}`;
+    info.style.color = "#b42318";
     return;
   }
 
   const remaining = Number(data.remaining ?? 0);
-  info.innerHTML = `🟢 Available Slots: <strong>${remaining}</strong>`;
-  info.style.color = remaining <= 0 ? "red" : "green";
+  info.innerHTML = `Available slots: <strong>${remaining}</strong>`;
+  info.style.color = remaining <= 0 ? "#b42318" : "#137333";
 }
 
 function applySlotAvailabilityResult(data) {
@@ -1377,7 +1402,7 @@ function openConfirmModal() {
 }
 
 function confirmSubmit() {
-  setConfirmLoading(true, "Submitting your appointment. Please wait...");
+  setConfirmLoading(true, "Submitting appointment request...");
   submitForm();
 }
 
@@ -1412,7 +1437,7 @@ function checkSlots() {
     return;
   }
 
-  setAvailabilityInfo("⏳ Checking available slot...", "#555");
+  setAvailabilityInfo("Checking slot availability...", "#475467");
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 20000);
@@ -1434,7 +1459,7 @@ function checkSlots() {
     .catch(err => {
       clearTimeout(timeoutId);
       console.error("checkSlots error:", err);
-      setAvailabilityInfo("⚠ Unable to check slot availability.", "red");
+      setAvailabilityInfo("Unable to check slot availability.", "#b42318");
       setApplicantFieldsDisabled(true);
     });
 }
@@ -1988,7 +2013,7 @@ function fetchMonthlyData(instance) {
 
       setDateInputDisabled(false);
       setTimeInputDisabled(!document.getElementById("date").value);
-      setAvailabilityInfo("Select a preferred date to load available time slots.");
+      setAvailabilityInfo("Select a date to load available time slots.");
       updateStepState();
     })
     .catch(err => {
@@ -2004,7 +2029,7 @@ function fetchMonthlyData(instance) {
       setTimeInputDisabled(true);
       setApplicantFieldsDisabled(true);
       renderTimeGrid([]);
-      setAvailabilityInfo("⚠ Unable to load available dates. Please try again.", "red");
+      setAvailabilityInfo("Unable to load available dates. Please try again.", "#b42318");
       updateStepState();
     });
 }
@@ -2175,12 +2200,12 @@ document.addEventListener("DOMContentLoaded", function() {
       setApplicantFieldsDisabled(true);
 
       if (dateStr) {
-        setAvailabilityInfo("⏳ Loading time slots for the selected date...", "#555");
+        setAvailabilityInfo("Loading available time slots...", "#475467");
         prefetchTimeSlotsForDate();
       } else {
         setTimeInputDisabled(true);
         renderTimeGrid([]);
-        setAvailabilityInfo("Select a preferred date first.");
+        setAvailabilityInfo("Select a date first.");
       }
 
       updateSummary();
@@ -2211,7 +2236,7 @@ document.addEventListener("DOMContentLoaded", function() {
       setDateInputDisabled(true);
       setTimeInputDisabled(true);
       setApplicantFieldsDisabled(true);
-      setAvailabilityInfo("Select a service first to load available dates.");
+      setAvailabilityInfo("Select a service to continue.");
       updateStepState();
       return;
     }
