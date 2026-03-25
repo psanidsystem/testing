@@ -8,6 +8,63 @@
   <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+
+  <style>
+    .wizard-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+    .wizard-step{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #d0d5dd;border-radius:14px;background:#f8fafc;transition:.2s}
+    .wizard-step.active{border-color:#2b62b7;background:#eef4ff;box-shadow:0 0 0 3px rgba(43,98,183,.08)}
+    .wizard-step.done{border-color:#157347;background:#ecfdf3}
+    .wizard-step .step-number{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:#dbe7ff;color:#1e4f9f;flex:none}
+    .wizard-step.done .step-number{background:#198754;color:#fff}
+    .wizard-step-label{display:flex;flex-direction:column;line-height:1.15}
+    .wizard-step-label small{color:#667085;font-size:12px}
+    .wizard-note{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;margin-bottom:18px;border-radius:14px;background:linear-gradient(135deg,#eef4ff,#f8fbff);border:1px solid #dbe7ff}
+    .wizard-note strong{color:#1d4f91}
+    .step-section{position:relative}
+    .step-section::before{content:attr(data-step-label);display:inline-block;margin-bottom:10px;padding:5px 10px;border-radius:999px;background:#eff6ff;color:#1d4f91;font-size:12px;font-weight:700;letter-spacing:.02em}
+    .quick-guide{display:none;margin-top:12px;padding:14px;border-radius:14px;background:#f8fafc;border:1px solid #d0d5dd}
+    .quick-guide.show{display:block}
+    .quick-guide h4{margin:0 0 8px;font-size:15px;color:#1d2939}
+    .quick-guide p{margin:0 0 8px;color:#475467}
+    .quick-points{margin:0;padding-left:18px;color:#475467}
+    .quick-guide-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .outline-btn,.ghost-btn{appearance:none;border:none;cursor:pointer;border-radius:10px;padding:10px 14px;font-weight:600}
+    .outline-btn{background:#fff;border:1px solid #2b62b7;color:#2b62b7}
+    .ghost-btn{background:#eef4ff;color:#1d4f91}
+    .time-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0 6px}
+    .time-chip{border:1px solid #d0d5dd;border-radius:12px;background:#fff;padding:12px;text-align:left;display:flex;flex-direction:column;gap:4px;cursor:pointer;transition:.2s}
+    .time-chip:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(16,24,40,.08)}
+    .time-chip strong{font-size:14px;color:#101828}
+    .time-chip small{font-size:12px;color:#667085}
+    .time-chip.available{border-color:#b7ebc6;background:#f6fffa}
+    .time-chip.full,.time-chip.closed{background:#f9fafb;color:#98a2b3}
+    .time-chip.full strong,.time-chip.closed strong{color:#667085}
+    .time-chip.selected{border-color:#2b62b7;background:#eef4ff;box-shadow:0 0 0 3px rgba(43,98,183,.12)}
+    .time-chip:disabled{cursor:not-allowed;opacity:.85;transform:none;box-shadow:none}
+    .time-chip.loading{align-items:center;justify-content:center;text-align:center;min-height:72px}
+    .inline-error{display:none;margin-top:6px;color:#b42318;font-size:12px}
+    .field-error{border-color:#f04438 !important;box-shadow:0 0 0 3px rgba(240,68,56,.1)}
+    .helper-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+    .summary-box.enhanced{border:1px solid #d0d5dd;background:#f8fafc}
+    .summary-box.enhanced h4{margin-bottom:12px}
+    .summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+    .summary-item{padding:12px;border-radius:12px;background:#fff;border:1px solid #e4e7ec}
+    .summary-item span{display:block;color:#667085;font-size:12px;margin-bottom:4px}
+    .summary-item strong{color:#101828;font-size:14px;word-break:break-word}
+    .summary-progress{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}
+    .summary-pill{padding:10px 12px;border-radius:999px;background:#fff;border:1px solid #d0d5dd;text-align:center;font-size:12px;font-weight:700;color:#667085}
+    .summary-pill.done{background:#ecfdf3;border-color:#abeFC6;color:#067647}
+    .summary-pill.active{background:#eef4ff;border-color:#b2ccff;color:#1d4f91}
+    .submit-wrap{display:flex;flex-direction:column;gap:10px}
+    .submit-subtext{font-size:12px;color:#667085;text-align:center}
+    .service-link{font-size:12px;color:#2b62b7;font-weight:600;cursor:pointer;text-decoration:underline}
+    .soft-note{font-size:12px;color:#667085}
+    @media (max-width:700px){
+      .wizard-steps,.summary-progress,.summary-grid,.time-grid{grid-template-columns:1fr}
+      .wizard-note{align-items:flex-start}
+    }
+  </style>
+
 </head>
 <body>
 
@@ -24,7 +81,34 @@
     </div>
 
     <div class="card" id="mainFormCard">
-      <div class="form-section">
+      <div class="wizard-steps" id="wizardSteps">
+        <div class="wizard-step active" data-step="1">
+          <div class="step-number">1</div>
+          <div class="wizard-step-label"><strong>Service</strong><small>Select request type</small></div>
+        </div>
+        <div class="wizard-step" data-step="2">
+          <div class="step-number">2</div>
+          <div class="wizard-step-label"><strong>Schedule</strong><small>Choose date and time</small></div>
+        </div>
+        <div class="wizard-step" data-step="3">
+          <div class="step-number">3</div>
+          <div class="wizard-step-label"><strong>Details</strong><small>Enter applicant info</small></div>
+        </div>
+        <div class="wizard-step" data-step="4">
+          <div class="step-number">4</div>
+          <div class="wizard-step-label"><strong>Confirm</strong><small>Review before submit</small></div>
+        </div>
+      </div>
+
+      <div class="wizard-note">
+        <div>
+          <strong>Improved appointment flow</strong><br>
+          <span class="soft-note">Select a service first to load the correct requirements and available dates.</span>
+        </div>
+        <span class="soft-note" id="bookingWindowBadge">Booking window loading...</span>
+      </div>
+
+      <div class="form-section step-section" data-step="1" data-step-label="Step 1 · Service">
         <h3 class="section-title">Service Information</h3>
 
         <label for="service">Select Service <span class="req">*</span></label>
@@ -37,9 +121,19 @@
         </select>
 
         <div class="info-banner" id="weekendNotice"></div>
+
+        <div class="quick-guide" id="serviceGuideBox">
+          <h4 id="serviceGuideTitle">Service requirements preview</h4>
+          <p id="serviceGuideText">Select a service to view the applicable reminder and requirements.</p>
+          <ul class="quick-points" id="serviceGuideList"></ul>
+          <div class="quick-guide-actions">
+            <button type="button" class="outline-btn" id="serviceGuideBtn" onclick="openSelectedServiceGuide()">View Full Requirements</button>
+            <button type="button" class="ghost-btn" onclick="scrollToStep(2)">Proceed to Schedule</button>
+          </div>
+        </div>
       </div>
 
-      <div class="form-section">
+      <div class="form-section step-section" data-step="2" data-step-label="Step 2 · Schedule">
         <h3 class="section-title">Appointment Schedule</h3>
 
         <div class="two-col">
@@ -73,40 +167,71 @@
         <div class="service-info">
           <small id="serviceInfoText"></small>
         </div>
+
+        <div class="time-grid" id="timeGrid"></div>
+        <p class="soft-note">Tip: available time cards will show remaining slots and can be tapped directly.</p>
       </div>
 
-      <div class="form-section">
+      <div class="form-section step-section" data-step="3" data-step-label="Step 3 · Applicant Details">
         <h3 class="section-title">Applicant Details</h3>
 
         <label for="fullname">Full Name <span class="req">*</span></label>
         <input id="fullname" type="text" placeholder="Enter full name" required>
+        <div class="inline-error" id="fullnameError"></div>
 
         <div class="two-col">
           <div>
             <label for="email">Email Address</label>
             <input id="email" type="email" placeholder="example@gmail.com">
+            <div class="inline-error" id="emailError"></div>
           </div>
 
           <div>
             <label for="phone">Mobile Number</label>
-            <input id="phone" type="tel" placeholder="09XXXXXXXXX">
+            <input id="phone" type="tel" placeholder="09XXXXXXXXX" maxlength="11">
+            <div class="inline-error" id="phoneError"></div>
           </div>
         </div>
 
-        <p class="helper-text">Provide at least one contact detail.</p>
+        <div class="helper-row">
+          <p class="helper-text">Provide at least one contact detail.</p>
+          <span class="soft-note">Email is recommended for confirmation notices.</span>
+        </div>
       </div>
 
-      <div class="summary-box">
+      <div class="summary-box enhanced step-section" data-step="4" data-step-label="Step 4 · Review">
         <h4>Appointment Summary</h4>
-        <p><strong>Service:</strong> <span id="summaryService">Not selected</span></p>
-        <p><strong>Date:</strong> <span id="summaryDate">Not selected</span></p>
-        <p><strong>Time:</strong> <span id="summaryTime">Not selected</span></p>
-      </div>
 
-      <button type="button" id="submitBtn" onclick="openConfirmModal()">
-        <span id="btnText">Submit Appointment Request</span>
-        <span id="btnLoader" class="loading" style="display:none;"></span>
-      </button>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <span>Selected Service</span>
+            <strong id="summaryService">Not selected</strong>
+          </div>
+          <div class="summary-item">
+            <span>Preferred Date</span>
+            <strong id="summaryDate">Not selected</strong>
+          </div>
+          <div class="summary-item">
+            <span>Preferred Time</span>
+            <strong id="summaryTime">Not selected</strong>
+          </div>
+        </div>
+
+        <div class="summary-progress">
+          <div class="summary-pill" id="pillStep1">Service Ready</div>
+          <div class="summary-pill" id="pillStep2">Schedule Ready</div>
+          <div class="summary-pill" id="pillStep3">Details Ready</div>
+          <div class="summary-pill" id="pillStep4">Ready to Submit</div>
+        </div>
+
+        <div class="submit-wrap">
+          <button type="button" id="submitBtn" onclick="openConfirmModal()">
+            <span id="btnText">Submit Appointment Request</span>
+            <span id="btnLoader" class="loading" style="display:none;"></span>
+          </button>
+          <div class="submit-subtext">Review your details carefully before confirming the appointment request.</div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -509,7 +634,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-const EXEC_URL = "https://script.google.com/macros/s/AKfycbwZMzOdLHWiFFQ4Lng4h368mQD-boJrKpBT-zDry9qfrulPPLhKEskL6z7h4ypJOMlp8g/exec";
+const EXEC_URL = "REPLACE_WITH_YOUR_WEB_APP_EXEC_URL";
+const TIME_OPTIONS = ["8:00 AM","9:00 AM","10:00 AM","11:00 AM","1:00 PM","2:00 PM","3:00 PM","4:00 PM"];
 
 const DEFAULT_SLOTS = {
   "National ID Registration": 32,
@@ -528,6 +654,7 @@ let systemSettings = {
 };
 let bookingWindowEndDate = null;
 let activeCalendarRequestId = 0;
+let activeTimeGridRequestId = 0;
 let systemMessageAutoTimer = null;
 
 /* ================= UTILITIES ================= */
@@ -637,6 +764,7 @@ function agreePrivacy() {
   setTimeInputDisabled(true);
   setApplicantFieldsDisabled(true);
   setAvailabilityInfo("Select a service first to load available dates.");
+  updateSummary();
 }
 
 function normalizeMonthString(year, monthIndexZeroBased) {
@@ -660,6 +788,315 @@ function updateWeekendNotice() {
   el.textContent = `${parts.join(" • ")} • ${bookingWindowText}`;
   el.style.color = "#475467";
 }
+
+function updateBookingWindowBadge() {
+  const badge = document.getElementById("bookingWindowBadge");
+  if (!badge) return;
+  badge.textContent = bookingWindowEndDate
+    ? `Booking until ${formatPrettyDate(bookingWindowEndDate)}`
+    : "Booking window loading...";
+}
+
+function getServiceGuide(service) {
+  const guides = {
+    "National ID Registration": {
+      title: "National ID Registration",
+      text: "Bring original supporting documents for first-time registration.",
+      list: [
+        "Prepare one primary or acceptable secondary supporting document.",
+        "Ensure your full name and date of birth are readable.",
+        "Arrive before your selected appointment time."
+      ],
+      modalId: "nidModal"
+    },
+    "Correction/Updating of Demographic Information": {
+      title: "Correction/Updating of Demographic Information",
+      text: "Prepare documents that support the exact field to be corrected.",
+      list: [
+        "Bring original PSA/LCRO or other required supporting documents.",
+        "Review the field to be changed before visiting the center.",
+        "Additional evaluation may be required depending on the correction."
+      ],
+      modalId: "updateModal"
+    },
+    "Request National ID in Paper Format (ePhilID)": {
+      title: "Request National ID in Paper Format (ePhilID)",
+      text: "This service is for clients requesting their National ID in paper format.",
+      list: [
+        "Bring your transaction details if available.",
+        "Prepare a contact detail for follow-up if needed.",
+        "Please verify that your demographic information is correct."
+      ],
+      modalId: "ephilidModal"
+    },
+    "Retrieval of TRN / Other Concern": {
+      title: "Retrieval of TRN / Other Concern",
+      text: "Prepare details that can help personnel verify your concern quickly.",
+      list: [
+        "Bring any available reference, old slip, or transaction details.",
+        "Describe the concern clearly during your appointment.",
+        "Additional review may be required depending on the concern type."
+      ],
+      modalId: "trnModal"
+    }
+  };
+  return guides[service] || null;
+}
+
+function updateServiceGuide() {
+  const service = document.getElementById("service").value;
+  const box = document.getElementById("serviceGuideBox");
+  const title = document.getElementById("serviceGuideTitle");
+  const text = document.getElementById("serviceGuideText");
+  const list = document.getElementById("serviceGuideList");
+  const btn = document.getElementById("serviceGuideBtn");
+
+  if (!box || !title || !text || !list || !btn) return;
+
+  const guide = getServiceGuide(service);
+
+  if (!guide) {
+    box.classList.remove("show");
+    list.innerHTML = "";
+    return;
+  }
+
+  title.textContent = guide.title;
+  text.textContent = guide.text;
+  list.innerHTML = guide.list.map(item => `<li>${item}</li>`).join("");
+  btn.dataset.modalId = guide.modalId;
+  box.classList.add("show");
+}
+
+function openSelectedServiceGuide() {
+  const btn = document.getElementById("serviceGuideBtn");
+  const modalId = btn && btn.dataset.modalId;
+  if (modalId) openModal(modalId);
+}
+
+function scrollToStep(stepNumber) {
+  const section = document.querySelector(`.step-section[data-step="${stepNumber}"]`);
+  if (section) {
+    section.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+function setInlineError(fieldId, message) {
+  const field = document.getElementById(fieldId);
+  const error = document.getElementById(fieldId + "Error");
+  if (field) field.classList.toggle("field-error", !!message);
+  if (error) {
+    error.textContent = message || "";
+    error.style.display = message ? "block" : "none";
+  }
+}
+
+function validateApplicantFields(showErrors = false) {
+  const fullname = document.getElementById("fullname").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+
+  let valid = true;
+
+  const nameError = !fullname
+    ? "Full name is required."
+    : fullname.replace(/[^A-Z .'-]/gi, "").trim().length < 4
+      ? "Please enter a valid full name."
+      : "";
+  if (nameError) valid = false;
+
+  const emailError = email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    ? "Please enter a valid email address."
+    : "";
+  if (emailError) valid = false;
+
+  const phoneError = phone && !/^09\d{9}$/.test(phone)
+    ? "Use 11 digits starting with 09."
+    : "";
+  if (phoneError) valid = false;
+
+  const contactError = !email && !phone
+    ? "Provide at least one contact detail."
+    : "";
+  if (contactError) valid = false;
+
+  if (showErrors) {
+    setInlineError("fullname", nameError);
+    setInlineError("email", emailError || (contactError && !email ? contactError : ""));
+    setInlineError("phone", phoneError || (contactError && !phone ? contactError : ""));
+  }
+
+  return { valid, fullname, email, phone };
+}
+
+function updateStepState() {
+  const service = document.getElementById("service").value;
+  const date = document.getElementById("date").value;
+  const time = document.getElementById("time").value;
+  const applicant = validateApplicantFields(false);
+  const readyToSubmit = !!(service && date && time && applicant.valid && !document.getElementById("submitBtn").disabled);
+
+  document.querySelectorAll(".wizard-step").forEach(stepEl => {
+    const step = Number(stepEl.dataset.step || 0);
+    stepEl.classList.remove("active", "done");
+
+    if (step === 1 && service) stepEl.classList.add("done");
+    if (step === 2 && service && date && time) stepEl.classList.add("done");
+    if (step === 3 && service && date && time && applicant.valid) stepEl.classList.add("done");
+    if (step === 4 && readyToSubmit) stepEl.classList.add("done");
+
+    if ((step === 1 && !service) ||
+        (step === 2 && service && (!date || !time)) ||
+        (step === 3 && service && date && time && !applicant.valid) ||
+        (step === 4 && service && date && time && applicant.valid && !readyToSubmit)) {
+      stepEl.classList.add("active");
+    }
+  });
+
+  document.getElementById("pillStep1")?.classList.toggle("done", !!service);
+  document.getElementById("pillStep2")?.classList.toggle("done", !!(service && date && time));
+  document.getElementById("pillStep3")?.classList.toggle("done", !!(service && date && time && applicant.valid));
+  document.getElementById("pillStep4")?.classList.toggle("done", readyToSubmit);
+
+  document.getElementById("pillStep1")?.classList.toggle("active", !service);
+  document.getElementById("pillStep2")?.classList.toggle("active", !!service && (!date || !time));
+  document.getElementById("pillStep3")?.classList.toggle("active", !!(service && date && time && !applicant.valid));
+  document.getElementById("pillStep4")?.classList.toggle("active", !!(service && date && time && applicant.valid && !readyToSubmit));
+}
+
+function renderTimeGrid(items = [], loading = false) {
+  const grid = document.getElementById("timeGrid");
+  if (!grid) return;
+
+  if (loading) {
+    grid.innerHTML = `<button type="button" class="time-chip loading" disabled><strong>Loading time slots...</strong><small>Please wait</small></button>`;
+    return;
+  }
+
+  if (!items.length) {
+    grid.innerHTML = "";
+    return;
+  }
+
+  const selected = document.getElementById("time").value;
+
+  grid.innerHTML = items.map(item => {
+    const normalizedTime = item.time;
+    const rawRemaining = Number(item.remaining ?? 0);
+    const remaining = Number.isFinite(rawRemaining) ? rawRemaining : 0;
+    const open = item.open !== false;
+    const disabled = !open || remaining <= 0;
+    const statusClass = !open ? "closed" : remaining <= 0 ? "full" : "available";
+    const statusText = !open
+      ? (item.reason || "Closed")
+      : remaining <= 0
+        ? "Fully booked"
+        : `${remaining} slot${remaining > 1 ? "s" : ""} left`;
+
+    return `
+      <button type="button"
+        class="time-chip ${statusClass} ${selected === normalizedTime ? "selected" : ""}"
+        ${disabled ? "disabled" : ""}
+        data-time="${normalizedTime}"
+        onclick="selectTimeSlot('${normalizedTime.replace(/'/g, "\\'")}')">
+        <strong>${normalizedTime}</strong>
+        <small>${statusText}</small>
+      </button>
+    `;
+  }).join("");
+}
+
+function populateTimeSelect(items = []) {
+  const timeSelect = document.getElementById("time");
+  const current = timeSelect.value;
+  timeSelect.innerHTML = '<option value="">-- Select Time --</option>';
+
+  items.forEach(item => {
+    const option = document.createElement("option");
+    option.value = item.time;
+    const remaining = Number(item.remaining ?? 0);
+    if (item.open === false) {
+      option.textContent = `${item.time} — Closed`;
+      option.disabled = true;
+    } else if (remaining <= 0) {
+      option.textContent = `${item.time} — Full`;
+      option.disabled = true;
+    } else {
+      option.textContent = `${item.time} — ${remaining} slot${remaining > 1 ? "s" : ""} left`;
+    }
+    timeSelect.appendChild(option);
+  });
+
+  const stillExists = [...timeSelect.options].some(opt => opt.value === current && !opt.disabled);
+  timeSelect.value = stillExists ? current : "";
+}
+
+async function prefetchTimeSlotsForDate() {
+  const service = document.getElementById("service").value;
+  const date = document.getElementById("date").value;
+
+  setApplicantFieldsDisabled(true);
+
+  if (!service || !date) {
+    renderTimeGrid([]);
+    populateTimeSelect([]);
+    updateStepState();
+    return;
+  }
+
+  const requestId = ++activeTimeGridRequestId;
+  setTimeInputDisabled(true);
+  renderTimeGrid([], true);
+  setAvailabilityInfo("⏳ Loading time slots for the selected date...", "#555");
+
+  const results = await Promise.all(TIME_OPTIONS.map(async rawTime => {
+    const cacheKey = `${service}_${date}_${rawTime}`;
+    if (dailySlotCache[cacheKey]) {
+      return { time: rawTime, ...dailySlotCache[cacheKey] };
+    }
+
+    try {
+      const res = await postJson({
+        action: "slots",
+        date,
+        service,
+        time: rawTime
+      });
+      const data = await res.json();
+      dailySlotCache[cacheKey] = data;
+      return { time: rawTime, ...data };
+    } catch (err) {
+      return { time: rawTime, status: "error", open: false, reason: "Unable to load slot" };
+    }
+  }));
+
+  if (requestId !== activeTimeGridRequestId) return;
+
+  populateTimeSelect(results);
+  renderTimeGrid(results);
+  setTimeInputDisabled(false);
+
+  if (document.getElementById("time").value) {
+    checkSlots();
+  } else {
+    setAvailabilityInfo("Select a preferred time to continue.", "#555");
+  }
+
+  updateStepState();
+}
+
+function selectTimeSlot(timeValue) {
+  const timeSelect = document.getElementById("time");
+  if (!timeSelect || !timeValue) return;
+
+  const targetOption = [...timeSelect.options].find(opt => opt.value === timeValue && !opt.disabled);
+  if (!targetOption) return;
+
+  timeSelect.value = timeValue;
+  updateSummary();
+  checkSlots();
+}
+
 
 function formatAppointmentDate(dateStr) {
   if (!dateStr) return "";
@@ -705,6 +1142,10 @@ function updateSummary() {
   document.getElementById("summaryService").textContent = service;
   document.getElementById("summaryDate").textContent = rawDate ? formatPrettyDate(rawDate) : "Not selected";
   document.getElementById("summaryTime").textContent = time;
+
+  updateServiceGuide();
+  updateBookingWindowBadge();
+  updateStepState();
 }
 
 function showCheckmark() {
@@ -777,7 +1218,10 @@ function resetForm() {
   monthlyBooked = {};
   dailySlotCache = {};
   monthlySlotCache = {};
+  renderTimeGrid([]);
+  ["fullname","email","phone"].forEach(id => setInlineError(id, ""));
   updateWeekendNotice();
+  updateBookingWindowBadge();
   updateSummary();
 
   setDateInputDisabled(true);
@@ -817,6 +1261,13 @@ function applySlotAvailabilityResult(data) {
   } else {
     setApplicantFieldsDisabled(true);
   }
+
+  renderTimeGrid(TIME_OPTIONS.map(time => {
+    const key = `${document.getElementById("service").value}_${document.getElementById("date").value}_${time}`;
+    return { time, ...(dailySlotCache[key] || {}) };
+  }).filter(item => item.open !== undefined || item.status === "error"));
+
+  updateStepState();
 }
 
 function sendConfirmationEmailInBackground(payload) {
@@ -954,26 +1405,22 @@ async function loadSystemSettings() {
 
 function openConfirmModal() {
   const service = document.getElementById("service").value;
-  const fullname = document.getElementById("fullname").value.trim();
   const date = document.getElementById("date").value;
   const time = document.getElementById("time").value;
-  const email = document.getElementById("email").value.trim();
-  const phone = document.getElementById("phone").value.trim();
+  const applicant = validateApplicantFields(true);
+  const fullname = applicant.fullname;
+  const email = applicant.email;
+  const phone = applicant.phone;
 
-  if (!service || !fullname || !date || !time) {
-    showSystemMessage("Missing Fields", "Please complete all required fields.");
+  if (!service || !date || !time || !fullname) {
+    showSystemMessage("Missing Fields", "Please complete all required fields before proceeding.");
+    updateStepState();
     return;
   }
 
-  if (!email && !phone) {
-    showSystemMessage("Contact Required", "Provide at least email OR mobile number.");
-    return;
-  }
-
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  if (email && !emailPattern.test(email)) {
-    showSystemMessage("Invalid Email", "Please enter a valid email address.");
+  if (!applicant.valid) {
+    showSystemMessage("Check Your Details", "Please review the highlighted applicant information.");
+    updateStepState();
     return;
   }
 
@@ -1241,7 +1688,64 @@ window.printSlip = function() {
         <meta charset="UTF-8">
         <title>Print Appointment Slip</title>
         ${printStyles}
-      </head>
+      
+  <style>
+    .wizard-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+    .wizard-step{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #d0d5dd;border-radius:14px;background:#f8fafc;transition:.2s}
+    .wizard-step.active{border-color:#2b62b7;background:#eef4ff;box-shadow:0 0 0 3px rgba(43,98,183,.08)}
+    .wizard-step.done{border-color:#157347;background:#ecfdf3}
+    .wizard-step .step-number{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:#dbe7ff;color:#1e4f9f;flex:none}
+    .wizard-step.done .step-number{background:#198754;color:#fff}
+    .wizard-step-label{display:flex;flex-direction:column;line-height:1.15}
+    .wizard-step-label small{color:#667085;font-size:12px}
+    .wizard-note{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;margin-bottom:18px;border-radius:14px;background:linear-gradient(135deg,#eef4ff,#f8fbff);border:1px solid #dbe7ff}
+    .wizard-note strong{color:#1d4f91}
+    .step-section{position:relative}
+    .step-section::before{content:attr(data-step-label);display:inline-block;margin-bottom:10px;padding:5px 10px;border-radius:999px;background:#eff6ff;color:#1d4f91;font-size:12px;font-weight:700;letter-spacing:.02em}
+    .quick-guide{display:none;margin-top:12px;padding:14px;border-radius:14px;background:#f8fafc;border:1px solid #d0d5dd}
+    .quick-guide.show{display:block}
+    .quick-guide h4{margin:0 0 8px;font-size:15px;color:#1d2939}
+    .quick-guide p{margin:0 0 8px;color:#475467}
+    .quick-points{margin:0;padding-left:18px;color:#475467}
+    .quick-guide-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .outline-btn,.ghost-btn{appearance:none;border:none;cursor:pointer;border-radius:10px;padding:10px 14px;font-weight:600}
+    .outline-btn{background:#fff;border:1px solid #2b62b7;color:#2b62b7}
+    .ghost-btn{background:#eef4ff;color:#1d4f91}
+    .time-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0 6px}
+    .time-chip{border:1px solid #d0d5dd;border-radius:12px;background:#fff;padding:12px;text-align:left;display:flex;flex-direction:column;gap:4px;cursor:pointer;transition:.2s}
+    .time-chip:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(16,24,40,.08)}
+    .time-chip strong{font-size:14px;color:#101828}
+    .time-chip small{font-size:12px;color:#667085}
+    .time-chip.available{border-color:#b7ebc6;background:#f6fffa}
+    .time-chip.full,.time-chip.closed{background:#f9fafb;color:#98a2b3}
+    .time-chip.full strong,.time-chip.closed strong{color:#667085}
+    .time-chip.selected{border-color:#2b62b7;background:#eef4ff;box-shadow:0 0 0 3px rgba(43,98,183,.12)}
+    .time-chip:disabled{cursor:not-allowed;opacity:.85;transform:none;box-shadow:none}
+    .time-chip.loading{align-items:center;justify-content:center;text-align:center;min-height:72px}
+    .inline-error{display:none;margin-top:6px;color:#b42318;font-size:12px}
+    .field-error{border-color:#f04438 !important;box-shadow:0 0 0 3px rgba(240,68,56,.1)}
+    .helper-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+    .summary-box.enhanced{border:1px solid #d0d5dd;background:#f8fafc}
+    .summary-box.enhanced h4{margin-bottom:12px}
+    .summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+    .summary-item{padding:12px;border-radius:12px;background:#fff;border:1px solid #e4e7ec}
+    .summary-item span{display:block;color:#667085;font-size:12px;margin-bottom:4px}
+    .summary-item strong{color:#101828;font-size:14px;word-break:break-word}
+    .summary-progress{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}
+    .summary-pill{padding:10px 12px;border-radius:999px;background:#fff;border:1px solid #d0d5dd;text-align:center;font-size:12px;font-weight:700;color:#667085}
+    .summary-pill.done{background:#ecfdf3;border-color:#abeFC6;color:#067647}
+    .summary-pill.active{background:#eef4ff;border-color:#b2ccff;color:#1d4f91}
+    .submit-wrap{display:flex;flex-direction:column;gap:10px}
+    .submit-subtext{font-size:12px;color:#667085;text-align:center}
+    .service-link{font-size:12px;color:#2b62b7;font-weight:600;cursor:pointer;text-decoration:underline}
+    .soft-note{font-size:12px;color:#667085}
+    @media (max-width:700px){
+      .wizard-steps,.summary-progress,.summary-grid,.time-grid{grid-template-columns:1fr}
+      .wizard-note{align-items:flex-start}
+    }
+  </style>
+
+</head>
       <body>
         <div id="printArea">${slipHtml}</div>
       </body>
@@ -1507,11 +2011,13 @@ function fetchMonthlyData(instance) {
     bookingWindowEndDate = cached.bookingWindowEndDate || bookingWindowEndDate;
 
     updateWeekendNotice();
+    updateBookingWindowBadge();
     instance.redraw();
 
     setDateInputDisabled(false);
     setTimeInputDisabled(!document.getElementById("date").value);
-    setAvailabilityInfo("Select a preferred date and time to check available slot.");
+    setAvailabilityInfo("Select a preferred date to load available time slots.");
+    updateStepState();
     return;
   }
 
@@ -1534,11 +2040,13 @@ function fetchMonthlyData(instance) {
       bookingWindowEndDate = data.bookingWindowEndDate || bookingWindowEndDate;
 
       updateWeekendNotice();
+      updateBookingWindowBadge();
       instance.redraw();
 
       setDateInputDisabled(false);
       setTimeInputDisabled(!document.getElementById("date").value);
-      setAvailabilityInfo("Select a preferred date and time to check available slot.");
+      setAvailabilityInfo("Select a preferred date to load available time slots.");
+      updateStepState();
     })
     .catch(err => {
       if (requestId !== activeCalendarRequestId) return;
@@ -1546,12 +2054,15 @@ function fetchMonthlyData(instance) {
       console.error("Monthly fetch error:", err);
       monthlyBooked = {};
       updateWeekendNotice();
+      updateBookingWindowBadge();
       instance.redraw();
 
       setDateInputDisabled(true);
       setTimeInputDisabled(true);
       setApplicantFieldsDisabled(true);
+      renderTimeGrid([]);
       setAvailabilityInfo("⚠ Unable to load available dates. Please try again.", "red");
+      updateStepState();
     });
 }
 
@@ -1570,6 +2081,19 @@ document.addEventListener("DOMContentLoaded", function() {
       .toUpperCase()
       .replace(/\s+/g, " ")
       .replace(/^\s+/, "");
+    validateApplicantFields(true);
+    updateSummary();
+  });
+
+  document.getElementById("email").addEventListener("input", function() {
+    validateApplicantFields(true);
+    updateSummary();
+  });
+
+  document.getElementById("phone").addEventListener("input", function() {
+    this.value = this.value.replace(/[^0-9]/g, "").slice(0, 11);
+    validateApplicantFields(true);
+    updateSummary();
   });
 
   document.getElementById("service").addEventListener("change", updateSummary);
@@ -1577,6 +2101,7 @@ document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("time").addEventListener("change", updateSummary);
 
   updateSummary();
+  updateBookingWindowBadge();
 
   const calendar = flatpickr("#date", {
     dateFormat: "Y-m-d",
@@ -1703,15 +2228,15 @@ document.addEventListener("DOMContentLoaded", function() {
     },
 
     onChange: function(selectedDates, dateStr, instance) {
-      dailySlotCache = {};
       document.getElementById("time").value = "";
       setApplicantFieldsDisabled(true);
 
       if (dateStr) {
-        setTimeInputDisabled(false);
-        setAvailabilityInfo("Select a preferred time to check available slot.");
+        setAvailabilityInfo("⏳ Loading time slots for the selected date...", "#555");
+        prefetchTimeSlotsForDate();
       } else {
         setTimeInputDisabled(true);
+        renderTimeGrid([]);
         setAvailabilityInfo("Select a preferred date first.");
       }
 
@@ -1723,11 +2248,13 @@ document.addEventListener("DOMContentLoaded", function() {
     monthlyBooked = {};
     dailySlotCache = {};
     resetSlotInfo();
+    renderTimeGrid([]);
 
     document.getElementById("time").value = "";
     document.getElementById("fullname").value = "";
     document.getElementById("email").value = "";
     document.getElementById("phone").value = "";
+    ["fullname","email","phone"].forEach(id => setInlineError(id, ""));
 
     calendar.clear();
     calendar.redraw();
@@ -1737,23 +2264,13 @@ document.addEventListener("DOMContentLoaded", function() {
       closeModal(id);
     });
 
-    const modalMap = {
-      "National ID Registration": "nidModal",
-      "Correction/Updating of Demographic Information": "updateModal",
-      "Request National ID in Paper Format (ePhilID)": "ephilidModal",
-      "Retrieval of TRN / Other Concern": "trnModal"
-    };
-
     if (!this.value) {
       setDateInputDisabled(true);
       setTimeInputDisabled(true);
       setApplicantFieldsDisabled(true);
       setAvailabilityInfo("Select a service first to load available dates.");
+      updateStepState();
       return;
-    }
-
-    if (modalMap[this.value]) {
-      openModal(modalMap[this.value]);
     }
 
     setDateInputDisabled(true);
@@ -1766,6 +2283,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   timeSelect.addEventListener("change", function() {
     setApplicantFieldsDisabled(true);
+    updateSummary();
     checkSlots();
   });
 });
