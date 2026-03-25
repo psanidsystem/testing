@@ -2808,3 +2808,185 @@ button.time-chip:hover:not(:disabled) {
     width: 100%;
   }
 }
+
+
+
+/* =========================================================
+   PHASE 7 TYPOGRAPHY POLISH + OFFICIAL FOOTER
+   ========================================================= */
+
+.summary-box.enhanced {
+  padding: 18px 18px 16px;
+}
+
+.summary-box.enhanced h4 {
+  font-size: 18px;
+  color: #17325c;
+  margin: 0 0 14px;
+  letter-spacing: 0.01em;
+}
+
+.summary-grid {
+  gap: 12px;
+}
+
+.summary-item {
+  background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+}
+
+.summary-item span {
+  font-size: 11.5px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #6b7b92;
+}
+
+.summary-item strong {
+  font-size: 15px;
+  line-height: 1.35;
+  color: #14213b;
+}
+
+.summary-progress {
+  margin: 16px 0 14px;
+}
+
+.summary-pill {
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+}
+
+.submit-wrap {
+  margin-top: 4px;
+}
+
+.submit-wrap button {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.submit-subtext {
+  color: #667085;
+  max-width: 420px;
+  margin: 0 auto;
+  line-height: 1.45;
+}
+
+.confirm-card p,
+.confirm-card li,
+.slip-card p,
+.slip-card li,
+.modal-content p,
+.modal-content li {
+  color: #344054;
+  line-height: 1.62;
+}
+
+.confirm-card h3,
+.slip-title,
+.modal-content h3 {
+  letter-spacing: 0.01em;
+}
+
+.confirm-card .confirm-message,
+.slip-card .slip-subtitle {
+  color: #667085;
+}
+
+.confirm-status {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f6f9ff 0%, #eef4ff 100%);
+  border: 1px solid #dbe7fb;
+}
+
+.confirm-status span:last-child {
+  color: #17325c;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.official-footer {
+  margin: 18px auto 0;
+  max-width: 760px;
+}
+
+.official-footer-inner {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid #d9e4f2;
+  background: linear-gradient(180deg, #f9fbff 0%, #f3f7fd 100%);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.official-footer-brand,
+.official-footer-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.official-footer-brand strong {
+  font-size: 13px;
+  color: #18325c;
+  letter-spacing: 0.02em;
+}
+
+.official-footer-brand span,
+.official-footer-meta span {
+  font-size: 12px;
+  color: #667085;
+  line-height: 1.4;
+}
+
+.official-footer-meta {
+  text-align: right;
+}
+
+@media (max-width: 700px) {
+  .summary-box.enhanced {
+    padding: 14px 12px;
+  }
+
+  .summary-box.enhanced h4 {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .summary-item strong {
+    font-size: 14px;
+  }
+
+  .submit-wrap button {
+    font-size: 15px;
+  }
+
+  .official-footer {
+    margin-top: 14px;
+  }
+
+  .official-footer-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 13px 14px;
+    border-radius: 16px;
+  }
+
+  .official-footer-brand strong {
+    font-size: 12.5px;
+  }
+
+  .official-footer-brand span,
+  .official-footer-meta span {
+    font-size: 11.5px;
+  }
+
+  .official-footer-meta {
+    text-align: left;
+  }
+}
