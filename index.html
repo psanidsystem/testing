@@ -589,6 +589,7 @@ const DEFAULT_SLOTS = {
 let monthlyBooked = {};
 let dailySlotCache = {};
 let monthlySlotCache = {};
+let dateSlotCache = {};
 let systemSettings = {
   saturdayOpen: false,
   sundayOpen: false,
@@ -1212,6 +1213,7 @@ function resetForm() {
   monthlyBooked = {};
   dailySlotCache = {};
   monthlySlotCache = {};
+  dateSlotCache = {};
   renderTimeGrid([]);
   ["fullname","email","phone"].forEach(id => setInlineError(id, ""));
   updateWeekendNotice();
