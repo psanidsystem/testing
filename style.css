@@ -3051,3 +3051,41 @@ button.time-chip:hover:not(:disabled) {
     padding: 4px 8px;
   }
 }
+
+
+/* Phase 11B footer placement fix */
+body {
+  flex-direction: column;
+  align-items: center;
+}
+
+#pageContent {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.mini-official-footer {
+  width: 100%;
+  max-width: 640px;
+  margin: 12px auto 2px;
+  padding: 0 8px 6px;
+}
+
+.mini-official-footer-inner {
+  text-align: center;
+  color: #667085;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+@media (max-width: 700px) {
+  .mini-official-footer {
+    margin: 10px auto 0;
+    padding-bottom: 2px;
+  }
+
+  .mini-official-footer-inner {
+    font-size: 10.5px;
+  }
+}
