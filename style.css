@@ -2326,3 +2326,485 @@ button:hover {
     width: 100%;
   }
 }
+
+
+
+/* =========================================================
+   PHASE 6 MOBILE CLEANUP + FORMAL LOADING
+   ========================================================= */
+
+/* stronger reset for time cards so they do not inherit main button style */
+button.time-chip,
+button.time-chip:hover,
+button.time-chip:focus,
+button.time-chip:disabled {
+  margin-top: 0;
+  min-height: auto;
+  width: 100%;
+  color: inherit;
+  box-shadow: none;
+  transform: none;
+  letter-spacing: normal;
+}
+
+button.time-chip {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+}
+
+button.time-chip.available {
+  background: linear-gradient(180deg, #fbfffd 0%, #f4fcf7 100%);
+}
+
+button.time-chip.full,
+button.time-chip.closed {
+  background: linear-gradient(180deg, #f9fafb 0%, #f5f7fa 100%);
+}
+
+button.time-chip.selected {
+  background: linear-gradient(180deg, #eef4ff 0%, #e8f0ff 100%);
+}
+
+button.time-chip:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(16, 24, 40, 0.08);
+}
+
+.loading {
+  width: 18px;
+  height: 18px;
+  border-width: 2.5px;
+}
+
+.formal-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(33, 88, 168, 0.16);
+  border-top-color: #2158a8;
+  border-right-color: #2158a8;
+  display: inline-block;
+  animation: spin 0.85s linear infinite;
+  flex: none;
+}
+
+.formal-spinner.dark {
+  border-color: rgba(23, 63, 126, 0.14);
+  border-top-color: #173f7e;
+  border-right-color: #173f7e;
+}
+
+.loading-panel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 82px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fbfdff 0%, #f4f8ff 100%);
+  border: 1px solid #dce6f5;
+}
+
+.loading-panel strong {
+  display: block;
+  color: #18325c;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.loading-panel small {
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.formal-loading-row {
+  gap: 10px;
+}
+
+.selected-date-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #edf5ff 0%, #e7f0ff 100%);
+  border: 1px solid #c9daf7;
+  color: #1b4d95;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.selected-date-badge .badge-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #1b4d95;
+  box-shadow: 0 0 0 3px rgba(27, 77, 149, 0.15);
+  flex: none;
+}
+
+.booking-badge {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #dbe7ff;
+  white-space: nowrap;
+}
+
+.helper-row.compact-helper {
+  justify-content: flex-start;
+}
+
+.summary-box.enhanced h4 {
+  margin-bottom: 10px;
+}
+
+.summary-progress {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.summary-pill {
+  padding: 9px 10px;
+}
+
+.submit-wrap button {
+  margin-top: 0;
+}
+
+/* clearer selected day in the calendar */
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+  background: #2158a8 !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow:
+    0 0 0 3px rgba(33, 88, 168, 0.15),
+    0 10px 20px rgba(33, 88, 168, 0.28) !important;
+}
+
+.flatpickr-day.selected::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 1.5px solid rgba(255,255,255,0.72);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.flatpickr-day.selected .slot-dot {
+  background: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.16) !important;
+}
+
+.flatpickr-day.today:not(.selected) {
+  border-color: rgba(33, 88, 168, 0.72);
+}
+
+@media (max-width: 700px) {
+  body {
+    padding: 14px 10px 24px;
+  }
+
+  .container {
+    max-width: 100%;
+  }
+
+  .header.card {
+    margin-bottom: 14px;
+    padding: 20px 16px 18px;
+    border-radius: 18px;
+  }
+
+  .logos {
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .logo {
+    width: 68px;
+    height: 68px;
+    padding: 4px;
+  }
+
+  .header h2 {
+    font-size: 21px;
+    margin-bottom: 4px;
+  }
+
+  .header p {
+    font-size: 12.5px;
+    line-height: 1.4;
+    max-width: 270px;
+  }
+
+  #mainFormCard {
+    padding: 16px 14px 18px;
+    border-radius: 18px;
+  }
+
+  .wizard-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .wizard-step {
+    padding: 10px 10px;
+    border-radius: 14px;
+    gap: 8px;
+  }
+
+  .step-number {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .wizard-step-label strong {
+    font-size: 12px;
+  }
+
+  .wizard-step-label small {
+    display: none;
+  }
+
+  .wizard-note {
+    padding: 10px 12px;
+    margin-bottom: 14px;
+    border-radius: 14px;
+  }
+
+  .wizard-note strong {
+    font-size: 13px;
+  }
+
+  .wizard-note .soft-note {
+    font-size: 11px;
+  }
+
+  .booking-badge {
+    white-space: normal;
+    text-align: center;
+    font-size: 11px;
+  }
+
+  .form-section {
+    margin-bottom: 18px;
+    padding: 14px 12px 12px;
+    border-radius: 16px;
+  }
+
+  .form-section::before {
+    margin-bottom: 8px;
+    font-size: 11px;
+  }
+
+  .section-title {
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+
+  label {
+    font-size: 13px;
+    margin-bottom: 7px;
+  }
+
+  input,
+  select,
+  .card input,
+  .card select {
+    height: 48px;
+    font-size: 14px;
+    padding: 0 13px;
+    border-radius: 14px;
+  }
+
+  .two-col {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .info-banner {
+    margin-top: 12px;
+    padding: 11px 12px;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .quick-guide {
+    margin-top: 12px;
+    padding: 12px 12px 13px;
+    border-radius: 14px;
+  }
+
+  .quick-guide h4 {
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+
+  .quick-guide p,
+  .quick-points {
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .quick-points li + li {
+    margin-top: 4px;
+  }
+
+  .quick-guide-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .outline-btn,
+  .ghost-btn {
+    width: 100%;
+    padding: 11px 12px;
+    border-radius: 12px;
+  }
+
+  .calendar-legend {
+    gap: 12px;
+    font-size: 11px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .service-info {
+    margin-top: 8px;
+  }
+
+  .soft-note.schedule-tip {
+    display: none;
+  }
+
+  .time-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .time-chip {
+    border-radius: 14px;
+    padding: 13px 14px;
+  }
+
+  .time-chip strong {
+    font-size: 14px;
+  }
+
+  .time-chip small {
+    font-size: 12px;
+  }
+
+  .helper-row.compact-helper {
+    margin-top: 8px;
+  }
+
+  .helper-row.compact-helper .helper-text {
+    font-size: 12px;
+    margin-top: 2px;
+  }
+
+  .summary-box.enhanced {
+    padding: 14px 12px;
+    border-radius: 16px;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .summary-item {
+    padding: 10px 11px;
+    border-radius: 12px;
+  }
+
+  .summary-item span {
+    font-size: 11px;
+    margin-bottom: 3px;
+  }
+
+  .summary-item strong {
+    font-size: 14px;
+  }
+
+  .summary-progress {
+    gap: 8px;
+    margin: 10px 0 12px;
+  }
+
+  .summary-pill {
+    font-size: 11px;
+    padding: 8px 8px;
+  }
+
+  .submit-subtext {
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  button {
+    min-height: 48px;
+    border-radius: 14px;
+    font-size: 15px;
+  }
+
+  .modal-content,
+  .confirm-card,
+  .slip-card {
+    width: calc(100vw - 22px) !important;
+    max-width: none !important;
+    margin: 12px auto !important;
+    padding: 16px 14px !important;
+    border-radius: 18px !important;
+  }
+
+  .modal-content p,
+  .modal-content li,
+  .confirm-card p {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+}
+
+@media (max-width: 420px) {
+  .header h2 {
+    font-size: 19px;
+  }
+
+  .header p {
+    max-width: 240px;
+  }
+
+  .wizard-step {
+    padding: 9px;
+  }
+
+  .step-number {
+    width: 26px;
+    height: 26px;
+  }
+
+  .wizard-step-label strong {
+    font-size: 11.5px;
+  }
+
+  .selected-date-badge {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .summary-progress {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-badge {
+    width: 100%;
+  }
+}
