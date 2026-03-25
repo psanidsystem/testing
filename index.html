@@ -83,7 +83,6 @@
             <label for="date">Preferred Date <span class="req">*</span></label>
             <input type="text" id="date" placeholder="Choose preferred appointment date" readonly>
             <div id="selectedDateBadge" class="selected-date-badge" style="display:none;"></div>
-            <div class="calendar-note">Only available dates can be selected.</div>
           </div>
 
           <div>
@@ -101,12 +100,19 @@
             </select>
           </div>
         </div>
-<div class="service-info">
+
+        <div class="calendar-legend">
+          <span><i class="dot dot-available"></i> Available</span>
+          <span><i class="dot dot-full"></i> Full</span>
+          <span><i class="dot dot-closed"></i> Closed</span>
+        </div>
+
+        <div class="service-info">
           <small id="serviceInfoText"></small>
         </div>
 
         <div class="time-grid" id="timeGrid"></div>
-        <p class="soft-note schedule-tip">Select an available time below.</p>
+        <p class="soft-note schedule-tip">Tap an available time card to select it.</p>
       </div>
 
       <div class="form-section step-section" data-step="3" data-step-label="Step 3 · Applicant Details">
@@ -173,6 +179,15 @@
 </div>
 
 <!-- ================= PRIVACY NOTICE ================= -->
+
+  <footer class="mini-official-footer">
+    <div class="mini-official-footer-inner">
+      <div>Philippine Statistics Authority</div>
+      <div>National ID System (PhilSys) · Official Appointment Booking Portal</div>
+      <div>© 2026 All Rights Reserved</div>
+    </div>
+  </footer>
+
 <div class="modal" id="privacyModal">
   <div class="modal-content">
     <h2>Privacy Notice – National ID Appointment System</h2>
@@ -1996,8 +2011,10 @@ window.submitForm = async function() {
 
 /* ================= MONTHLY CALENDAR DATA ================= */
 
-function fetchMonthlyData(instance) {
+function fetchMonthlyData(instance, options = {}) {
   const service = document.getElementById("service").value;
+  const keepOpen = !!options.keepOpen;
+  const wasOpen = !!(instance && instance.isOpen);
 
   if (!service) {
     monthlyBooked = {};
@@ -2008,6 +2025,7 @@ function fetchMonthlyData(instance) {
     setTimeInputDisabled(true);
     setApplicantFieldsDisabled(true);
     setAvailabilityInfo("Select a service first to load available dates.");
+    if (instance && instance.calendarContainer) instance.calendarContainer.classList.remove("calendar-loading");
     return;
   }
 
@@ -2015,13 +2033,14 @@ function fetchMonthlyData(instance) {
   const cacheKey = `${service}__${currentMonth}`;
   const requestId = ++activeCalendarRequestId;
 
-  setDateInputDisabled(true);
+  // Keep the date input active so the calendar popup does not close
+  // while the next month is loading.
   setTimeInputDisabled(true);
   setApplicantFieldsDisabled(true);
-  setAvailabilityInfo("⏳ Loading available dates...", "#555");
+  setAvailabilityInfo("Loading calendar...", "#475467");
 
-  monthlyBooked = {};
-  instance.redraw();
+  const calendarEl = instance && instance.calendarContainer ? instance.calendarContainer : null;
+  if (calendarEl) calendarEl.classList.add("calendar-loading");
 
   if (monthlySlotCache[cacheKey]) {
     const cached = monthlySlotCache[cacheKey];
@@ -2036,7 +2055,13 @@ function fetchMonthlyData(instance) {
 
     setDateInputDisabled(false);
     setTimeInputDisabled(!document.getElementById("date").value);
-    setAvailabilityInfo("Select a preferred date to load available time slots.");
+    setAvailabilityInfo("Select a date to load available time slots.");
+    if (calendarEl) calendarEl.classList.remove("calendar-loading");
+    if (keepOpen || wasOpen) {
+      requestAnimationFrame(() => {
+        try { instance.open(); } catch (e) {}
+      });
+    }
     updateStepState();
     return;
   }
@@ -2066,22 +2091,33 @@ function fetchMonthlyData(instance) {
       setDateInputDisabled(false);
       setTimeInputDisabled(!document.getElementById("date").value);
       setAvailabilityInfo("Select a date to load available time slots.");
+      if (calendarEl) calendarEl.classList.remove("calendar-loading");
+      if (keepOpen || wasOpen) {
+        requestAnimationFrame(() => {
+          try { instance.open(); } catch (e) {}
+        });
+      }
       updateStepState();
     })
     .catch(err => {
       if (requestId !== activeCalendarRequestId) return;
 
       console.error("Monthly fetch error:", err);
-      monthlyBooked = {};
       updateWeekendNotice();
       updateBookingWindowBadge();
       instance.redraw();
 
-      setDateInputDisabled(true);
+      setDateInputDisabled(false);
       setTimeInputDisabled(true);
       setApplicantFieldsDisabled(true);
       renderTimeGrid([]);
       setAvailabilityInfo("Unable to load available dates. Please try again.", "#b42318");
+      if (calendarEl) calendarEl.classList.remove("calendar-loading");
+      if (keepOpen || wasOpen) {
+        requestAnimationFrame(() => {
+          try { instance.open(); } catch (e) {}
+        });
+      }
       updateStepState();
     });
 }
@@ -2136,7 +2172,9 @@ document.addEventListener("DOMContentLoaded", function() {
     },
 
     onMonthChange: function(selectedDates, dateStr, instance) {
-      fetchMonthlyData(instance);
+      const badge = document.getElementById("bookingWindowBadge");
+      if (badge) badge.textContent = "Loading calendar...";
+      fetchMonthlyData(instance, { keepOpen: true });
     },
 
     onDayCreate: function(dObj, dStr, fp, dayElem) {
@@ -2144,7 +2182,7 @@ document.addEventListener("DOMContentLoaded", function() {
       today.setHours(0, 0, 0, 0);
 
       if (dayElem.dateObj < today) {
-        dayElem.classList.add("flatpickr-disabled", "calendar-day-unavailable");
+        dayElem.classList.add("flatpickr-disabled");
         dayElem.style.pointerEvents = "none";
         return;
       }
@@ -2159,30 +2197,43 @@ document.addEventListener("DOMContentLoaded", function() {
       const isSaturday = dayOfWeek === 6;
       const isSunday = dayOfWeek === 0;
 
-      dayElem.classList.remove(
-        "has-tooltip",
-        "flatpickr-disabled",
-        "calendar-day-unavailable",
-        "calendar-day-available"
-      );
+      const oldDot = dayElem.querySelector(".slot-dot");
+      if (oldDot) oldDot.remove();
+
+      dayElem.classList.remove("has-tooltip", "flatpickr-disabled", "calendar-closed-day", "calendar-full-day");
       dayElem.removeAttribute("data-tooltip");
       dayElem.style.pointerEvents = "";
 
       if (bookingWindowEndDate && date > bookingWindowEndDate) {
-        dayElem.classList.add("flatpickr-disabled", "calendar-day-unavailable");
+        dayElem.classList.add("flatpickr-disabled", "calendar-closed-day", "has-tooltip");
         dayElem.style.pointerEvents = "none";
+        dayElem.setAttribute("data-tooltip", "Outside booking window");
+
+        const dot = document.createElement("span");
+        dot.className = "slot-dot closed";
+        dayElem.appendChild(dot);
         return;
       }
 
       if (isSaturday && !systemSettings.saturdayOpen) {
-        dayElem.classList.add("flatpickr-disabled", "calendar-day-unavailable");
+        dayElem.classList.add("flatpickr-disabled", "calendar-closed-day", "has-tooltip");
         dayElem.style.pointerEvents = "none";
+        dayElem.setAttribute("data-tooltip", "Saturday closed");
+
+        const dot = document.createElement("span");
+        dot.className = "slot-dot closed";
+        dayElem.appendChild(dot);
         return;
       }
 
       if (isSunday && !systemSettings.sundayOpen) {
-        dayElem.classList.add("flatpickr-disabled", "calendar-day-unavailable");
+        dayElem.classList.add("flatpickr-disabled", "calendar-closed-day", "has-tooltip");
         dayElem.style.pointerEvents = "none";
+        dayElem.setAttribute("data-tooltip", "Sunday closed");
+
+        const dot = document.createElement("span");
+        dot.className = "slot-dot closed";
+        dayElem.appendChild(dot);
         return;
       }
 
@@ -2193,22 +2244,45 @@ document.addEventListener("DOMContentLoaded", function() {
       let booked = 0;
       let max = DEFAULT_SLOTS[service] || 0;
       let open = true;
+      let reason = "";
 
       if (dayData) {
         booked = Number(dayData.booked || 0);
         max = Number(dayData.max || 0);
         open = dayData.open !== false;
+        reason = dayData.reason || "";
       }
 
       const remaining = max - booked;
 
-      if (!open || max <= 0 || remaining <= 0) {
-        dayElem.classList.add("flatpickr-disabled", "calendar-day-unavailable");
+      if (!open || max <= 0) {
+        dayElem.classList.add("flatpickr-disabled", "calendar-closed-day", "has-tooltip");
         dayElem.style.pointerEvents = "none";
+        dayElem.setAttribute("data-tooltip", reason || "Booking closed");
+
+        const dot = document.createElement("span");
+        dot.className = "slot-dot closed";
+        dayElem.appendChild(dot);
         return;
       }
 
-      dayElem.classList.add("calendar-day-available");
+      if (remaining <= 0) {
+        dayElem.classList.add("flatpickr-disabled", "calendar-full-day", "has-tooltip");
+        dayElem.style.pointerEvents = "none";
+        dayElem.setAttribute("data-tooltip", "Fully booked");
+
+        const dot = document.createElement("span");
+        dot.className = "slot-dot full";
+        dayElem.appendChild(dot);
+        return;
+      }
+
+      const dot = document.createElement("span");
+      dot.classList.add("slot-dot", "many");
+      dayElem.appendChild(dot);
+
+      dayElem.classList.add("has-tooltip");
+      dayElem.setAttribute("data-tooltip", `${remaining} slots left`);
     },
 
     onChange: function(selectedDates, dateStr, instance) {
