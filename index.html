@@ -84,6 +84,7 @@
             <input type="text" id="date" placeholder="Choose preferred appointment date" readonly>
             <div id="selectedDateBadge" class="selected-date-badge" style="display:none;"></div>
             <div class="calendar-note">Only available dates can be selected. Choose the exact time below.</div>
+            <div id="calendarLoadingHint" class="calendar-loading-hint" style="display:none;">Loading calendar availability...</div>
           </div>
 
           <div>
@@ -166,11 +167,24 @@
             <span id="btnLoader" class="loading" style="display:none;"></span>
           </button>
           <div class="submit-subtext">Please review the details before submitting.</div>
+          <div class="booking-reminder-box">
+            <strong>Reminder</strong>
+            <span>Not all clients may receive an email notification. If your Appointment Slip is generated, your booking was recorded successfully.</span>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+
+  <footer class="mini-official-footer">
+    <div class="mini-official-footer-inner">
+      <div>Philippine Statistics Authority</div>
+      <div>National ID System (PhilSys) · Official Appointment Booking Portal</div>
+      <div>© 2026 All Rights Reserved</div>
+    </div>
+  </footer>
 
 <!-- ================= PRIVACY NOTICE ================= -->
 <div class="modal" id="privacyModal">
@@ -748,6 +762,13 @@ function updateSelectedDateBadge() {
 
   badge.style.display = "inline-flex";
   badge.innerHTML = `<span class="badge-dot"></span><span>Selected: ${formatPrettyDate(rawDate)}</span>`;
+}
+
+function setCalendarLoadingHint(isLoading, message = "Loading calendar availability...") {
+  const el = document.getElementById("calendarLoadingHint");
+  if (!el) return;
+  el.textContent = message;
+  el.style.display = isLoading ? "inline-flex" : "none";
 }
 
 function getServiceGuide(service) {
@@ -2033,6 +2054,7 @@ function fetchMonthlyData(instance, options = {}) {
     setApplicantFieldsDisabled(true);
     setAvailabilityInfo("Select a service first.");
     if (instance && instance.calendarContainer) instance.calendarContainer.classList.remove("calendar-loading");
+    setCalendarLoadingHint(false);
     return;
   }
 
@@ -2045,6 +2067,7 @@ function fetchMonthlyData(instance, options = {}) {
   setTimeInputDisabled(true);
   setApplicantFieldsDisabled(true);
   setAvailabilityInfo("Loading calendar...", "#475467");
+  setCalendarLoadingHint(true, "Loading calendar availability...");
 
   const calendarEl = instance && instance.calendarContainer ? instance.calendarContainer : null;
   if (calendarEl) calendarEl.classList.add("calendar-loading");
@@ -2064,6 +2087,7 @@ function fetchMonthlyData(instance, options = {}) {
     setTimeInputDisabled(!document.getElementById("date").value);
     setAvailabilityInfo("Select a date to load available time slots.");
     if (calendarEl) calendarEl.classList.remove("calendar-loading");
+    setCalendarLoadingHint(false);
     if (keepOpen || wasOpen) {
       requestAnimationFrame(() => {
         try { instance.open(); } catch (e) {}
@@ -2099,6 +2123,7 @@ function fetchMonthlyData(instance, options = {}) {
       setTimeInputDisabled(!document.getElementById("date").value);
       setAvailabilityInfo("Select a date to load available time slots.");
       if (calendarEl) calendarEl.classList.remove("calendar-loading");
+      setCalendarLoadingHint(false);
       if (keepOpen || wasOpen) {
         requestAnimationFrame(() => {
           try { instance.open(); } catch (e) {}
@@ -2120,6 +2145,7 @@ function fetchMonthlyData(instance, options = {}) {
       renderTimeGrid([]);
       setAvailabilityInfo("Unable to load available dates. Please try again.", "#b42318");
       if (calendarEl) calendarEl.classList.remove("calendar-loading");
+      setCalendarLoadingHint(false);
       if (keepOpen || wasOpen) {
         requestAnimationFrame(() => {
           try { instance.open(); } catch (e) {}
@@ -2181,6 +2207,7 @@ document.addEventListener("DOMContentLoaded", function() {
     onMonthChange: function(selectedDates, dateStr, instance) {
       const badge = document.getElementById("bookingWindowBadge");
       if (badge) badge.textContent = "Loading calendar...";
+      setCalendarLoadingHint(true, "Loading next month availability...");
       fetchMonthlyData(instance, { keepOpen: true });
     },
 
