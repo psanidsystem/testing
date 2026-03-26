@@ -3398,3 +3398,32 @@ span.flatpickr-weekday {
     line-height: 1.4;
   }
 }
+
+
+/* Phase 13B compact calendar loading indicator */
+.flatpickr-calendar.calendar-loading::after {
+  content: "Loading...";
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  z-index: 30;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #dbe4ef;
+  color: #2459a6;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+}
+
+@media (max-width: 700px) {
+  .flatpickr-calendar.calendar-loading::after {
+    content: "Loading...";
+    top: 7px;
+    right: 8px;
+    padding: 2px 7px;
+    font-size: 9.5px;
+  }
+}
