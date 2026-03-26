@@ -902,17 +902,19 @@
 }
     }
   
-  .field-hint{margin-top:6px;color:#667085;font-size:12px;line-height:1.45}
-  .sort-header-btn{
-    appearance:none;border:none;background:transparent;padding:0;
-    font:inherit;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
-    color:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+  .status-cell{display:flex;flex-direction:column;gap:6px}
+  .status-note{font-size:12px;line-height:1.45;color:#667085;max-width:220px}
+  .personnel-help-banner{
+    margin-bottom:16px;
+    padding:12px 14px;
+    border-radius:14px;
+    background:linear-gradient(180deg,#f7fbff 0%,#eef5ff 100%);
+    border:1px solid #dbe7fb;
+    color:#2459a6;
+    line-height:1.5;
   }
-  .sort-header-btn::after{content:"↕";font-size:11px;opacity:.35;transform:translateY(-.5px)}
-  .sort-header-btn.active{color:#2459a6}
-  .sort-header-btn.active.asc::after{content:"↑";opacity:1}
-  .sort-header-btn.active.desc::after{content:"↓";opacity:1}
-  .empty-row{padding:28px 16px !important;text-align:center;color:#667085}
+  .single-grid{grid-template-columns:1fr}
+  #outcomeReason{min-height:100px;resize:vertical}
 </style>
 </head>
 <body>
@@ -963,7 +965,7 @@
       <div class="topbar">
         <div class="title-wrap">
           <h2 id="sectionTitle">Dashboard Overview</h2>
-          <p>Review appointments, update records, sort tables, and manage available slots.</p>
+          <p>Review appointments, update records, and manage available slots.</p>
         </div>
         <div class="actions">
           <button class="btn btn-secondary" id="refreshBtn">Refresh Data</button>
@@ -1059,8 +1061,8 @@
               <input type="date" id="quickDate" />
             </div>
             <div class="field">
-              <label for="quickSlots">Exact Slots for Date</label>
-              <input type="number" id="quickSlots" min="0" placeholder="Example: 5 or 10" /><div class="field-hint">Enter the exact number of slots to allow for this date and service.</div>
+              <label for="quickSlots">Available Slots</label>
+              <input type="number" id="quickSlots" min="0" />
             </div>
             <button class="btn btn-primary" id="saveQuickSlotBtn">Save Slot Rule</button>
           </div>
@@ -1116,14 +1118,14 @@
             <table>
               <thead>
                 <tr>
-                  <th><button type="button" class="sort-header-btn" data-booking-sort="refCode">Reference</button></th>
-                  <th><button type="button" class="sort-header-btn" data-booking-sort="fullname">Name</button></th>
-                  <th><button type="button" class="sort-header-btn" data-booking-sort="service">Service</button></th>
-                  <th><button type="button" class="sort-header-btn" data-booking-sort="date">Date</button></th>
-                  <th><button type="button" class="sort-header-btn" data-booking-sort="time">Time</button></th>
-                  <th><button type="button" class="sort-header-btn" data-booking-sort="email">Email</button></th>
-                  <th><button type="button" class="sort-header-btn" data-booking-sort="phone">Phone</button></th>
-                  <th><button type="button" class="sort-header-btn" data-booking-sort="status">Status</button></th>
+                  <th>Reference</th>
+                  <th>Name</th>
+                  <th>Service</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -1146,7 +1148,7 @@
                   <tr>
                     <th>Date</th>
                     <th>Service</th>
-                    <th>Exact Slots</th>
+                    <th>Available Slots</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -1157,7 +1159,7 @@
 
           <div class="card">
             <div class="panel-title">
-              <h3>Default Service Capacities</h3>
+              <h3>Default Slot Limits</h3>
             </div>
             <div class="slot-list" id="defaultSlotList"></div>
           </div>
@@ -1439,8 +1441,8 @@
           <select id="slotService"></select>
         </div>
         <div class="field full">
-          <label for="slotCount">Exact Slots for Date</label>
-          <input id="slotCount" type="number" min="0" placeholder="Example: 5 or 10" /><div class="field-hint">Enter the exact number of slots to allow for this date and service.</div>
+          <label for="slotCount">Available Slots</label>
+          <input id="slotCount" type="number" min="0" />
         </div>
       </div>
       <div class="modal-actions">
@@ -1517,10 +1519,6 @@ let bookings = [];
 let slotRules = [];
 let availabilityRules = [];
 let users = [];
-let bookingSortState = {
-  key: "",
-  direction: "asc"
-};
 let weekendSettings = {
   saturdayOpen: false,
   sundayOpen: false,
@@ -1586,15 +1584,6 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
-function escapeAttr(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
 function showNotice(message, type = "success", targetId = "notice") {
   const el = document.getElementById(targetId);
   if (!el) return;
@@ -1655,9 +1644,9 @@ function formatTime(timeValue) {
 }
 
 function badgeClass(status) {
-  if (status === "Cancelled" || status === "No Show") return "badge badge-cancelled";
+  if (status === "Cancelled" || status === "No Show" || status === "Not Successful") return "badge badge-cancelled";
   if (status === "Pending" || status === "Arrived" || status === "Assisted") return "badge badge-pending";
-  if (status === "Completed") return "badge badge-confirmed";
+  if (status === "Completed" || status === "Successful") return "badge badge-confirmed";
   return "badge badge-confirmed";
 }
 
@@ -1803,7 +1792,12 @@ function renderRecentBookings(list = bookings) {
       <td>${escapeHtml(item.service)}</td>
       <td>${escapeHtml(formatDate(item.date))}</td>
       <td>${escapeHtml(formatTime(item.time))}</td>
-      <td><span class="${badgeClass(item.status)}">${escapeHtml(item.status)}</span></td>
+      <td>
+        <div class="status-cell">
+          <span class="${badgeClass(item.status)}">${escapeHtml(item.status)}</span>
+          ${item.outcomeReason ? `<div class="status-note">${escapeHtml(item.outcomeReason)}</div>` : ""}
+        </div>
+      </td>
     `;
     tbody.appendChild(tr);
   });
@@ -1817,7 +1811,7 @@ function getPersonnelActionButtons(item) {
   const status = (item.status || "").trim();
   const safeRef = JSON.stringify(item.refCode);
 
-  if (status === "Completed" || status === "Cancelled" || status === "No Show") {
+  if (status === "Completed" || status === "Cancelled" || status === "No Show" || status === "Not Successful") {
     return `<span class="${badgeClass(status)}">${escapeHtml(status)}</span>`;
   }
 
@@ -1830,19 +1824,12 @@ function getPersonnelActionButtons(item) {
     `;
   }
 
-  if (status === "Arrived") {
+  if (status === "Arrived" || status === "Assisted") {
     return `
       <div class="row-actions">
-        <button class="mini-btn mini-edit" onclick="updateBookingStatus(${safeRef}, 'Assisted')">Assist</button>
+        <button class="mini-btn mini-slot" onclick="savePersonnelOutcome(${safeRef}, 'Successful')">Successful</button>
+        <button class="mini-btn mini-edit" onclick="openOutcomeModal(${safeRef})">Not Successful</button>
         <button class="mini-btn mini-delete" onclick="updateBookingStatus(${safeRef}, 'No Show')">No Show</button>
-      </div>
-    `;
-  }
-
-  if (status === "Assisted") {
-    return `
-      <div class="row-actions">
-        <button class="mini-btn mini-slot" onclick="updateBookingStatus(${safeRef}, 'Completed')">Complete</button>
       </div>
     `;
   }
@@ -1850,93 +1837,26 @@ function getPersonnelActionButtons(item) {
   return `
     <div class="row-actions">
       <button class="mini-btn mini-slot" onclick="updateBookingStatus(${safeRef}, 'Arrived')">Arrived</button>
-      <button class="mini-btn mini-edit" onclick="updateBookingStatus(${safeRef}, 'Assisted')">Assist</button>
-      <button class="mini-btn mini-slot" onclick="updateBookingStatus(${safeRef}, 'Completed')">Complete</button>
       <button class="mini-btn mini-delete" onclick="updateBookingStatus(${safeRef}, 'No Show')">No Show</button>
     </div>
   `;
-}
-
-function getBookingSortValue(item, key) {
-  switch (key) {
-    case "date":
-      return new Date(String(item?.date || "") + "T00:00:00").getTime() || 0;
-    case "time": {
-      const raw = String(item?.time || "").trim().toUpperCase();
-      const match = raw.match(/^(\d{1,2}):(\d{2})\s?(AM|PM)$/);
-      if (!match) return raw;
-      let hour = Number(match[1]);
-      const minute = Number(match[2]);
-      const meridian = match[3];
-      if (meridian === "PM" && hour !== 12) hour += 12;
-      if (meridian === "AM" && hour === 12) hour = 0;
-      return hour * 60 + minute;
-    }
-    default:
-      return String(item?.[key] ?? "").trim().toLowerCase();
-  }
-}
-
-function getSortedBookings(items) {
-  const list = [...items];
-  if (!bookingSortState.key) return list;
-
-  list.sort((a, b) => {
-    const aVal = getBookingSortValue(a, bookingSortState.key);
-    const bVal = getBookingSortValue(b, bookingSortState.key);
-
-    if (typeof aVal === "number" && typeof bVal === "number") {
-      return bookingSortState.direction === "asc" ? aVal - bVal : bVal - aVal;
-    }
-
-    const compare = String(aVal).localeCompare(String(bVal), undefined, { numeric: true, sensitivity: "base" });
-    return bookingSortState.direction === "asc" ? compare : -compare;
-  });
-
-  return list;
-}
-
-function toggleBookingSort(key) {
-  if (bookingSortState.key === key) {
-    bookingSortState.direction = bookingSortState.direction === "asc" ? "desc" : "asc";
-  } else {
-    bookingSortState.key = key;
-    bookingSortState.direction = "asc";
-  }
-  renderBookingsTable();
-}
-
-function updateBookingSortButtons() {
-  document.querySelectorAll("[data-booking-sort]").forEach(btn => {
-    const key = btn.dataset.bookingSort;
-    btn.classList.remove("active", "asc", "desc");
-    if (bookingSortState.key === key) {
-      btn.classList.add("active", bookingSortState.direction);
-    }
-  });
 }
 
 function renderBookingsTable() {
   const tbody = document.getElementById("bookingsTableBody");
   if (!tbody) return;
 
-  const filtered = getSortedBookings(applyBookingFilters());
+  const filtered = applyBookingFilters();
   tbody.innerHTML = "";
-  updateBookingSortButtons();
-
-  if (!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="9" class="empty-row">No booking records found.</td></tr>`;
-    return;
-  }
 
   filtered.forEach(item => {
-    const encodedRef = encodeURIComponent(String(item.refCode || ""));
+    const safeRef = JSON.stringify(item.refCode);
 
     const actionHtml = canEditBookings()
       ? `
         <div class="row-actions">
-          <button type="button" class="mini-btn mini-edit" data-booking-action="edit" data-ref="${encodedRef}">Edit</button>
-          <button type="button" class="mini-btn mini-delete" data-booking-action="delete" data-ref="${encodedRef}">Delete</button>
+          <button class="mini-btn mini-edit" onclick="editBooking(${safeRef})">Edit</button>
+          <button class="mini-btn mini-delete" onclick="deleteBooking(${safeRef})">Delete</button>
         </div>
       `
       : getPersonnelActionButtons(item);
@@ -1950,7 +1870,12 @@ function renderBookingsTable() {
       <td>${escapeHtml(formatTime(item.time))}</td>
       <td>${escapeHtml(item.email || "—")}</td>
       <td>${escapeHtml(item.phone || "—")}</td>
-      <td><span class="${badgeClass(item.status)}">${escapeHtml(item.status)}</span></td>
+      <td>
+        <div class="status-cell">
+          <span class="${badgeClass(item.status)}">${escapeHtml(item.status)}</span>
+          ${item.outcomeReason ? `<div class="status-note">${escapeHtml(item.outcomeReason)}</div>` : ""}
+        </div>
+      </td>
       <td>${actionHtml}</td>
     `;
     tbody.appendChild(tr);
@@ -2330,7 +2255,9 @@ async function loadAdminData(options = {}) {
   const { silent = false } = options;
 
   try {
-    const data = await apiRequest({ action: "adminList" });
+    const data = await apiRequest({
+      action: userRole === "personnel" ? "adminListBookings" : "adminList"
+    });
 
     if (data.status === "error") {
       throw new Error(data.message || "Unable to load admin data.");
@@ -2503,7 +2430,7 @@ async function saveSlotRule(fromQuickPanel = false) {
   const available = fromQuickPanel ? document.getElementById("quickSlots").value : document.getElementById("slotCount").value;
 
   if (!date || !service || available === "") {
-    showNotice("Please complete date, service, and exact slots.", "error");
+    showNotice("Please complete date, service, and available slots.", "error");
     return;
   }
 
@@ -2528,7 +2455,7 @@ async function saveSlotRule(fromQuickPanel = false) {
     });
 
     rerenderState();
-    showNotice("Exact slot rule saved.");
+    showNotice("Slot rule saved.");
     closeModal("slotModal");
     resetSlotForm();
 
@@ -2605,6 +2532,67 @@ function logout() {
 }
 
 
+let activeOutcomeRef = "";
+
+window.openOutcomeModal = function(refCode) {
+  const item = bookings.find(b => b.refCode === refCode);
+  if (!item) {
+    showNotice("Booking not found.", "error");
+    return;
+  }
+
+  activeOutcomeRef = refCode;
+  document.getElementById("outcomeRef").value = refCode;
+  document.getElementById("outcomeReason").value = item.outcomeReason || "";
+  openModal("outcomeModal");
+};
+
+window.submitOutcomeModal = async function() {
+  if (!activeOutcomeRef) {
+    showNotice("Booking not found.", "error");
+    return;
+  }
+  const reason = String(document.getElementById("outcomeReason").value || "").trim();
+  await savePersonnelOutcome(activeOutcomeRef, "Not Successful", reason);
+};
+
+window.savePersonnelOutcome = async function(refCode, outcome, reason = "") {
+  const item = bookings.find(b => b.refCode === refCode);
+  if (!item) {
+    showNotice("Booking not found.", "error");
+    return;
+  }
+
+  try {
+    const result = await apiRequest({
+      action: "personnelSaveOutcome",
+      refCode,
+      outcome,
+      reason
+    });
+
+    if (result.status === "error") {
+      throw new Error(result.message || "Unable to save assistance outcome.");
+    }
+
+    const nextStatus = outcome === "Successful" ? "Completed" : "Not Successful";
+
+    upsertBookingLocal({
+      ...item,
+      status: nextStatus,
+      outcome,
+      outcomeReason: reason
+    }, item.refCode);
+
+    rerenderState();
+    closeModal("outcomeModal");
+    activeOutcomeRef = "";
+    showNotice(outcome === "Successful" ? "Marked as successful." : "Marked as not successful.");
+  } catch (err) {
+    showNotice(err.message || "Unable to save assistance outcome.", "error");
+  }
+};
+
 window.updateBookingStatus = async function(refCode, newStatus) {
   const item = bookings.find(b => b.refCode === refCode);
   if (!item) {
@@ -2641,22 +2629,6 @@ window.updateBookingStatus = async function(refCode, newStatus) {
     showNotice(err.message || "Unable to update booking status.", "error");
   }
 };
-
-
-function handleBookingsTableClick(event) {
-  const actionBtn = event.target.closest("[data-booking-action]");
-  if (!actionBtn) return;
-
-  const action = actionBtn.dataset.bookingAction;
-  const refCode = decodeURIComponent(String(actionBtn.dataset.ref || ""));
-  if (!refCode) return;
-
-  if (action === "edit") {
-    window.editBooking(refCode);
-  } else if (action === "delete") {
-    window.deleteBooking(refCode);
-  }
-}
 
 window.editBooking = function(refCode) {
   const item = bookings.find(b => b.refCode === refCode);
@@ -2818,6 +2790,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!requireLogin()) return;
 
   if (userRole === "personnel") {
+    const helpBanner = document.getElementById("personnelHelpBanner");
+    if (helpBanner) helpBanner.style.display = "block";
+    document.querySelector('.nav-btn[data-section="dashboard"]')?.remove();
     document.querySelector('.nav-btn[data-section="slots"]')?.remove();
     document.querySelector('.nav-btn[data-section="availability"]')?.remove();
     document.querySelector('.nav-btn[data-section="users"]')?.remove();
@@ -2829,6 +2804,11 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("openAvailabilityModalBtn")?.remove();
     document.getElementById("openUserModalBtn")?.remove();
     document.getElementById("saveQuickSlotBtn")?.remove();
+
+    const pageTitle = document.querySelector(".page-title h1");
+    const pageDesc = document.querySelector(".page-title p");
+    if (pageTitle) pageTitle.textContent = "Personnel Assistance Dashboard";
+    if (pageDesc) pageDesc.textContent = "Track client attendance and record whether the assistance was successful or not successful.";
 
     switchSection("bookings");
   }
@@ -2898,12 +2878,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById(id)?.addEventListener("input", renderBookingsTable);
   });
 
-  document.querySelectorAll("[data-booking-sort]").forEach(btn => {
-    btn.addEventListener("click", () => toggleBookingSort(btn.dataset.bookingSort));
-  });
-
-  document.getElementById("bookingsTableBody")?.addEventListener("click", handleBookingsTableClick);
-
   document.getElementById("clearFiltersBtn")?.addEventListener("click", () => {
     document.getElementById("filterService").value = "";
     document.getElementById("filterStatus").value = "";
@@ -2931,5 +2905,30 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
   </script>
+
+<div class="modal" id="outcomeModal">
+  <div class="modal-card compact-modal">
+    <div class="modal-head">
+      <h3>Mark Assistance Outcome</h3>
+      <button class="ghost-btn" type="button" onclick="closeModal('outcomeModal')">Close</button>
+    </div>
+    <div class="form-grid single-grid">
+      <div class="field">
+        <label for="outcomeRef">Reference</label>
+        <input id="outcomeRef" type="text" readonly />
+      </div>
+      <div class="field">
+        <label for="outcomeReason">Reason if not successful</label>
+        <textarea id="outcomeReason" rows="4" placeholder="Enter the reason why the assistance was not successful."></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="ghost-btn" type="button" onclick="closeModal('outcomeModal')">Cancel</button>
+      <button class="primary-btn" type="button" onclick="submitOutcomeModal()">Save Reason</button>
+    </div>
+  </div>
+</div>
+
+
 </body>
 </html>
