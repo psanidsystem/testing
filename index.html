@@ -83,6 +83,7 @@
             <label for="date">Preferred Date <span class="req">*</span></label>
             <input type="text" id="date" placeholder="Choose preferred appointment date" readonly>
             <div id="selectedDateBadge" class="selected-date-badge" style="display:none;"></div>
+            <div class="calendar-note">Only available dates can be selected. Choose the exact time below.</div>
           </div>
 
           <div>
@@ -100,19 +101,12 @@
             </select>
           </div>
         </div>
-
-        <div class="calendar-legend">
-          <span><i class="dot dot-available"></i> Available</span>
-          <span><i class="dot dot-full"></i> Full</span>
-          <span><i class="dot dot-closed"></i> Closed</span>
-        </div>
-
-        <div class="service-info">
+<div class="service-info">
           <small id="serviceInfoText"></small>
         </div>
 
         <div class="time-grid" id="timeGrid"></div>
-        <p class="soft-note schedule-tip">Tap an available time card to select it.</p>
+        <p class="soft-note schedule-tip">Select a time below.</p>
       </div>
 
       <div class="form-section step-section" data-step="3" data-step-label="Step 3 · Applicant Details">
@@ -946,28 +940,43 @@ function renderTimeGrid(items = [], loading = false) {
   }
 
   const selected = document.getElementById("time").value;
+  const availableItems = items.filter(item => item.open !== false && Number(item.remaining ?? 0) > 0);
+  const closedItems = items.filter(item => item.open === false);
+  const fullItems = items.filter(item => item.open !== false && Number(item.remaining ?? 0) <= 0);
 
-  grid.innerHTML = items.map(item => {
+  if (!availableItems.length) {
+    let title = "No available schedule";
+    let message = "No appointment time is available for the selected date. Please choose another date.";
+
+    if (closedItems.length === items.length) {
+      const commonReason = closedItems[0]?.reason || "Closed";
+      title = "Selected date is unavailable";
+      message = commonReason;
+    } else if (fullItems.length === items.length) {
+      title = "Selected date is fully booked";
+      message = "All appointment times for this date are already full. Please choose another date.";
+    }
+
+    grid.innerHTML = `
+      <div class="slot-empty-state">
+        <strong>${title}</strong>
+        <span>${message}</span>
+      </div>
+    `;
+    return;
+  }
+
+  grid.innerHTML = availableItems.map(item => {
     const normalizedTime = item.time;
-    const rawRemaining = Number(item.remaining ?? 0);
-    const remaining = Number.isFinite(rawRemaining) ? rawRemaining : 0;
-    const open = item.open !== false;
-    const disabled = !open || remaining <= 0;
-    const statusClass = !open ? "closed" : remaining <= 0 ? "full" : "available";
-    const statusText = !open
-      ? (item.reason || "Closed")
-      : remaining <= 0
-        ? "Fully booked"
-        : `${remaining} slot${remaining > 1 ? "s" : ""} left`;
+    const remaining = Number(item.remaining ?? 0);
 
     return `
       <button type="button"
-        class="time-chip ${statusClass} ${selected === normalizedTime ? "selected" : ""}"
-        ${disabled ? "disabled" : ""}
+        class="time-chip available ${selected === normalizedTime ? "selected" : ""}"
         data-time="${normalizedTime}"
-        onclick="selectTimeSlot('${normalizedTime.replace(/'/g, "\\'")}')">
+        onclick="selectTimeSlot('${normalizedTime.replace(/'/g, "\'")}')">
         <strong>${normalizedTime}</strong>
-        <small>${statusText}</small>
+        <small>${remaining} slot${remaining > 1 ? "s" : ""} available</small>
       </button>
     `;
   }).join("");
@@ -976,21 +985,15 @@ function renderTimeGrid(items = [], loading = false) {
 function populateTimeSelect(items = []) {
   const timeSelect = document.getElementById("time");
   const current = timeSelect.value;
-  timeSelect.innerHTML = '<option value="">-- Select Time --</option>';
+  const availableItems = items.filter(item => item.open !== false && Number(item.remaining ?? 0) > 0);
 
-  items.forEach(item => {
+  timeSelect.innerHTML = `<option value="">${availableItems.length ? "-- Select Time --" : "-- No Available Time --"}</option>`;
+
+  availableItems.forEach(item => {
     const option = document.createElement("option");
     option.value = item.time;
     const remaining = Number(item.remaining ?? 0);
-    if (item.open === false) {
-      option.textContent = `${item.time} — Closed`;
-      option.disabled = true;
-    } else if (remaining <= 0) {
-      option.textContent = `${item.time} — Full`;
-      option.disabled = true;
-    } else {
-      option.textContent = `${item.time} — ${remaining} slot${remaining > 1 ? "s" : ""} left`;
-    }
+    option.textContent = `${item.time} — ${remaining} slot${remaining > 1 ? "s" : ""} available`;
     timeSelect.appendChild(option);
   });
 
@@ -1056,14 +1059,27 @@ async function prefetchTimeSlotsForDate() {
 
     if (requestId !== activeTimeGridRequestId) return;
 
+    const availableItems = results.filter(item => item.open !== false && Number(item.remaining ?? 0) > 0);
+
     populateTimeSelect(results);
     renderTimeGrid(results);
-    setTimeInputDisabled(false);
+    setTimeInputDisabled(availableItems.length === 0);
 
-    if (document.getElementById("time").value) {
+    if (!availableItems.length) {
+      const allClosed = results.length && results.every(item => item.open === false);
+      const allFull = results.length && results.every(item => item.open !== false && Number(item.remaining ?? 0) <= 0);
+
+      if (allClosed) {
+        setAvailabilityInfo(results[0]?.reason || "Selected date is unavailable.", "#b42318");
+      } else if (allFull) {
+        setAvailabilityInfo("Selected date is fully booked. Please choose another date.", "#b42318");
+      } else {
+        setAvailabilityInfo("No available time for the selected date.", "#b42318");
+      }
+    } else if (document.getElementById("time").value) {
       checkSlots();
     } else {
-      setAvailabilityInfo("Select a time to continue.", "#475467");
+      setAvailabilityInfo("Select a time below.", "#475467");
     }
 
     updateStepState();
@@ -2015,7 +2031,7 @@ function fetchMonthlyData(instance, options = {}) {
     setDateInputDisabled(true);
     setTimeInputDisabled(true);
     setApplicantFieldsDisabled(true);
-    setAvailabilityInfo("Select a service first to load available dates.");
+    setAvailabilityInfo("Select a service first.");
     if (instance && instance.calendarContainer) instance.calendarContainer.classList.remove("calendar-loading");
     return;
   }
