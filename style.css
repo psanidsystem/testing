@@ -3089,3 +3089,207 @@ body {
     font-size: 10.5px;
   }
 }
+
+
+/* Phase 12 simplified slot and calendar UX */
+.calendar-note {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #667085;
+  line-height: 1.4;
+}
+
+.calendar-legend {
+  display: none !important;
+}
+
+.slot-dot,
+.has-tooltip::before,
+.has-tooltip::after {
+  display: none !important;
+}
+
+.slot-empty-state {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 16px;
+  border-radius: 16px;
+  border: 1px solid #e4e7ec;
+  background: linear-gradient(180deg, #fcfcfd 0%, #f8fafc 100%);
+  text-align: left;
+}
+
+.slot-empty-state strong {
+  color: #1f2937;
+  font-size: 15px;
+}
+
+.slot-empty-state span {
+  color: #667085;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+button.time-chip.available,
+button.time-chip.available:hover,
+button.time-chip.available:focus {
+  background: linear-gradient(180deg, #f7fbff 0%, #edf5ff 100%);
+  border-color: #bfd3f6;
+  color: #17325c;
+  box-shadow: 0 8px 18px rgba(33, 88, 168, 0.08);
+}
+
+button.time-chip.available strong {
+  color: #17325c;
+}
+
+button.time-chip.available small {
+  color: #2459a6;
+  font-weight: 700;
+}
+
+button.time-chip.available.selected {
+  background: linear-gradient(180deg, #2b62b7 0%, #2158a8 100%);
+  border-color: #2158a8;
+  box-shadow: 0 14px 28px rgba(33, 88, 168, 0.20);
+}
+
+button.time-chip.available.selected strong,
+button.time-chip.available.selected small {
+  color: #ffffff;
+}
+
+.flatpickr-calendar {
+  border: 1px solid #dbe4ef !important;
+  border-radius: 18px !important;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.14) !important;
+  overflow: hidden;
+  background: #ffffff !important;
+}
+
+.flatpickr-months {
+  background: linear-gradient(180deg, #2459a6 0%, #1d4f91 100%) !important;
+  padding: 6px 4px 8px;
+}
+
+.flatpickr-current-month {
+  padding-top: 8px !important;
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months,
+.flatpickr-current-month input.cur-year {
+  color: #ffffff !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+}
+
+span.flatpickr-weekday {
+  color: #667085 !important;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.flatpickr-days {
+  padding: 8px 8px 10px;
+}
+
+.flatpickr-day {
+  border-radius: 12px !important;
+  color: #344054;
+  font-weight: 600;
+  border: 1px solid transparent !important;
+}
+
+.flatpickr-day.calendar-day-available {
+  background: #ffffff !important;
+  color: #243b63 !important;
+}
+
+.flatpickr-day.calendar-day-available:hover:not(.selected) {
+  background: #eef4ff !important;
+  color: #1d4f91 !important;
+}
+
+.flatpickr-day.today:not(.selected) {
+  border-color: #bfd3f6 !important;
+  color: #1d4f91 !important;
+  background: #f6f9ff !important;
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+  background: linear-gradient(180deg, #2b62b7 0%, #2158a8 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid #2158a8 !important;
+  box-shadow:
+    0 0 0 3px rgba(33, 88, 168, 0.14),
+    0 10px 22px rgba(33, 88, 168, 0.24) !important;
+}
+
+.flatpickr-day.selected::after,
+.flatpickr-day.startRange::after,
+.flatpickr-day.endRange::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 1.5px solid rgba(255,255,255,0.75);
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+.flatpickr-day.calendar-day-unavailable,
+.flatpickr-day.calendar-adjacent-day,
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay,
+.flatpickr-disabled {
+  color: #d0d5dd !important;
+  background: #fafbfc !important;
+  border-color: transparent !important;
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+  opacity: 0.75 !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 700px) {
+  .slot-empty-state {
+    padding: 16px 14px;
+    border-radius: 14px;
+  }
+
+  .slot-empty-state strong {
+    font-size: 14px;
+  }
+
+  .slot-empty-state span {
+    font-size: 12.5px;
+  }
+
+  .calendar-note {
+    font-size: 11.5px;
+  }
+
+  .flatpickr-calendar {
+    width: 100% !important;
+    max-width: 320px;
+    border-radius: 16px !important;
+  }
+
+  .flatpickr-current-month .flatpickr-monthDropdown-months,
+  .flatpickr-current-month input.cur-year {
+    font-size: 14px !important;
+  }
+
+  .flatpickr-day {
+    border-radius: 10px !important;
+  }
+
+  .flatpickr-day.selected::after,
+  .flatpickr-day.startRange::after,
+  .flatpickr-day.endRange::after {
+    inset: 3px;
+    border-radius: 8px;
+  }
+}
