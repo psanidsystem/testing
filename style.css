@@ -3293,3 +3293,108 @@ span.flatpickr-weekday {
     border-radius: 8px;
   }
 }
+
+
+/* Phase 13 final public polish */
+.calendar-loading-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 11px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f6f9ff 0%, #eef4ff 100%);
+  border: 1px solid #dbe7fb;
+  color: #2459a6;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.calendar-loading-hint::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(36, 89, 166, 0.18);
+  border-top-color: #2459a6;
+  border-right-color: #2459a6;
+  display: inline-block;
+  animation: spin 0.85s linear infinite;
+  flex: none;
+}
+
+.booking-reminder-box {
+  margin-top: 10px;
+  padding: 12px 13px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fffdf7 0%, #fff8ea 100%);
+  border: 1px solid #f1deb1;
+  text-align: left;
+}
+
+.booking-reminder-box strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #8a5a00;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
+.booking-reminder-box span {
+  display: block;
+  color: #6b5a2b;
+  font-size: 12.5px;
+  line-height: 1.48;
+}
+
+.mini-official-footer {
+  width: 100%;
+  max-width: 640px;
+  margin: 12px auto 6px;
+  padding: 0 8px 6px;
+}
+
+.mini-official-footer-inner {
+  text-align: center;
+  color: #667085;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.mini-official-footer-inner div + div {
+  margin-top: 2px;
+}
+
+@media (max-width: 700px) {
+  .calendar-loading-hint {
+    width: 100%;
+    justify-content: center;
+    font-size: 11.5px;
+    padding: 8px 10px;
+  }
+
+  .booking-reminder-box {
+    margin-top: 9px;
+    padding: 11px 12px;
+    border-radius: 13px;
+  }
+
+  .booking-reminder-box strong {
+    font-size: 11.5px;
+  }
+
+  .booking-reminder-box span {
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .mini-official-footer {
+    margin: 10px auto 4px;
+    padding-bottom: 2px;
+  }
+
+  .mini-official-footer-inner {
+    font-size: 10.5px;
+    line-height: 1.4;
+  }
+}
